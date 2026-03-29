@@ -3,601 +3,656 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Subdomain Hunter</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<title>SubRecon v5</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:#080c10; --surface:#0d1117; --border:#1e2a36;
-    --accent:#00e5ff; --accent2:#ff4081; --accent3:#69ff47; --accent4:#ffeb3b;
-    --text:#c9d1d9; --muted:#4a5568;
-    --font-mono:'Share Tech Mono',monospace; --font-ui:'Rajdhani',sans-serif;
-  }
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-height:100vh;overflow-x:hidden;}
-  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,229,255,.012) 2px,rgba(0,229,255,.012) 4px);pointer-events:none;z-index:9999;}
+:root{
+  --bg:#07090d;--s1:#0d1117;--s2:#111820;
+  --b:#1e2a36;
+  --c1:#00e5ff;--c2:#ff4081;--c3:#69ff47;--c4:#ffeb3b;--c5:#ce93d8;
+  --tx:#c9d1d9;--mu:#4a5568;
+  --mono:'Share Tech Mono',monospace;--ui:'Rajdhani',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--tx);font-family:var(--mono);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,229,255,.01) 2px,rgba(0,229,255,.01) 4px);pointer-events:none;z-index:9999;}
 
-  header{border-bottom:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;gap:14px;background:linear-gradient(90deg,rgba(0,229,255,.05) 0%,transparent 60%);}
-  .logo{font-family:var(--font-ui);font-size:24px;font-weight:700;color:var(--accent);letter-spacing:3px;text-transform:uppercase;}
-  .logo span{color:var(--accent2);}
-  .logo-sub{font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:2px;}
-  .version-badge{margin-left:auto;background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.3);color:var(--accent);padding:3px 10px;font-size:11px;letter-spacing:2px;}
+header{border-bottom:1px solid var(--b);padding:14px 24px;display:flex;align-items:center;background:linear-gradient(90deg,rgba(0,229,255,.05),transparent 70%);}
+.logo{font-family:var(--ui);font-size:22px;font-weight:700;color:var(--c1);letter-spacing:3px;}
+.logo em{color:var(--c2);font-style:normal;}
+.hbadge{margin-left:auto;font-size:10px;color:var(--c1);border:1px solid rgba(0,229,255,.3);padding:3px 10px;letter-spacing:2px;}
 
-  main{padding:24px 28px;max-width:1500px;margin:0 auto;}
+main{padding:20px 24px;max-width:1400px;margin:0 auto;}
 
-  /* CORS notice */
-  .notice{background:rgba(255,235,59,.05);border:1px solid rgba(255,235,59,.25);padding:10px 16px;margin-bottom:20px;font-size:11px;color:var(--accent4);line-height:1.7;display:flex;gap:10px;align-items:flex-start;}
-  .notice-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.alert{display:flex;gap:10px;padding:10px 14px;margin-bottom:16px;font-size:11px;line-height:1.7;border:1px solid;}
+.alert-info{background:rgba(0,229,255,.04);border-color:rgba(0,229,255,.2);color:var(--c1);}
 
-  /* Keys panel */
-  .keys-panel{background:var(--surface);border:1px solid var(--border);margin-bottom:20px;}
-  .keys-header{padding:11px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;}
-  .keys-title{font-family:var(--font-ui);font-size:13px;font-weight:600;letter-spacing:2px;color:var(--accent4);text-transform:uppercase;}
-  .keys-sub{font-size:10px;color:var(--muted);margin-left:auto;}
-  .keys-body{display:none;padding:14px 16px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;}
-  .keys-body.open{display:grid;}
-  .key-row{display:flex;flex-direction:column;gap:5px;}
-  .key-label{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;display:flex;align-items:center;gap:6px;}
-  .badge-free{color:var(--accent3);font-size:9px;border:1px solid rgba(105,255,71,.4);padding:1px 5px;}
-  .badge-paid{color:var(--accent4);font-size:9px;border:1px solid rgba(255,235,59,.4);padding:1px 5px;}
-  .key-input{background:var(--bg);border:1px solid var(--border);color:var(--accent3);font-family:var(--font-mono);font-size:12px;padding:7px 11px;outline:none;width:100%;}
-  .key-input:focus{border-color:var(--accent);}
-  .key-input::placeholder{color:var(--muted);}
+.panel{background:var(--s1);border:1px solid var(--b);margin-bottom:16px;}
+.panel-head{padding:10px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;}
+.panel-title{font-family:var(--ui);font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--c4);}
+.panel-sub{font-size:10px;color:var(--mu);margin-left:auto;}
+.panel-body{display:none;padding:14px;gap:12px;border-top:1px solid var(--b);}
+.panel-body.open{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));}
+.krow{display:flex;flex-direction:column;gap:4px;}
+.klabel{font-size:9px;color:var(--mu);letter-spacing:2px;text-transform:uppercase;display:flex;gap:6px;align-items:center;}
+.kb-free{font-size:8px;padding:1px 5px;border:1px solid;color:var(--c3);border-color:rgba(105,255,71,.3);}
+.kb-paid{font-size:8px;padding:1px 5px;border:1px solid;color:var(--c4);border-color:rgba(255,235,59,.3);}
+.kinput{background:var(--bg);border:1px solid var(--b);color:var(--c3);font-family:var(--mono);font-size:11px;padding:7px 10px;outline:none;width:100%;}
+.kinput:focus{border-color:var(--c1);}
+.kinput::placeholder{color:var(--mu);}
 
-  /* Input */
-  .input-row{display:flex;gap:10px;margin-bottom:18px;align-items:stretch;}
-  .input-wrap{flex:1;position:relative;}
-  .input-wrap::before{content:'> TARGET:';position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--accent);font-size:11px;letter-spacing:1px;pointer-events:none;}
-  input.domain-input{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--accent3);font-family:var(--font-mono);font-size:15px;padding:13px 14px 13px 100px;outline:none;transition:border-color .2s;}
-  input.domain-input:focus{border-color:var(--accent);box-shadow:0 0 14px rgba(0,229,255,.1);}
-  input.domain-input::placeholder{color:var(--muted);}
-  .btn{font-family:var(--font-ui);font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:0 22px;border:none;cursor:pointer;transition:all .2s;white-space:nowrap;}
-  .btn-scan{background:var(--accent);color:#000;}
-  .btn-scan:hover{box-shadow:0 0 22px rgba(0,229,255,.4);}
-  .btn-scan:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;}
-  .btn-export{background:transparent;color:var(--accent3);border:1px solid var(--accent3);}
-  .btn-export:hover{background:rgba(105,255,71,.07);}
-  .btn-export:disabled{opacity:.3;cursor:not-allowed;}
-  .btn-clear{background:transparent;color:var(--muted);border:1px solid var(--border);}
-  .btn-clear:hover{color:var(--accent2);border-color:var(--accent2);}
+.irow{display:flex;gap:8px;margin-bottom:16px;align-items:stretch;}
+.iwrap{flex:1;position:relative;}
+.iwrap::before{content:'TARGET ›';position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--c1);font-size:10px;letter-spacing:1px;pointer-events:none;}
+input.di{width:100%;background:var(--s1);border:1px solid var(--b);color:var(--c3);font-family:var(--mono);font-size:15px;padding:12px 12px 12px 88px;outline:none;transition:border-color .2s;}
+input.di:focus{border-color:var(--c1);box-shadow:0 0 12px rgba(0,229,255,.08);}
+input.di::placeholder{color:var(--mu);}
+.btn{font-family:var(--ui);font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:0 20px;border:none;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.btn:disabled{opacity:.35;cursor:not-allowed;}
+.b-go{background:var(--c1);color:#000;}
+.b-go:not(:disabled):hover{box-shadow:0 0 20px rgba(0,229,255,.4);}
+.b-ex{background:transparent;color:var(--c3);border:1px solid var(--c3);}
+.b-ex:not(:disabled):hover{background:rgba(105,255,71,.07);}
+.b-cl{background:transparent;color:var(--mu);border:1px solid var(--b);}
+.b-cl:hover{color:var(--c2);border-color:var(--c2);}
 
-  /* Sources */
-  .sources-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:7px;margin-bottom:20px;}
-  .src-card{background:var(--surface);border:1px solid var(--border);padding:9px 12px;cursor:pointer;user-select:none;transition:all .15s;}
-  .src-card.active{border-color:var(--accent);background:rgba(0,229,255,.04);}
-  .src-card-top{display:flex;align-items:center;gap:7px;margin-bottom:3px;}
-  .src-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0;}
-  .src-card.active .src-dot{background:var(--accent);box-shadow:0 0 5px var(--accent);}
-  .src-name{font-family:var(--font-ui);font-size:12px;font-weight:600;letter-spacing:1px;color:var(--text);}
-  .src-card.active .src-name{color:var(--accent);}
-  .src-meta{display:flex;gap:5px;align-items:center;}
-  .src-type{font-size:9px;color:var(--muted);letter-spacing:1px;}
-  .src-status{font-size:9px;letter-spacing:1px;}
-  .cors-ok{color:var(--accent3);}
-  .cors-proxy{color:var(--accent4);}
-  .cors-key{color:#ce93d8;}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:6px;margin-bottom:18px;}
+.scard{background:var(--s1);border:1px solid var(--b);padding:8px 11px;cursor:pointer;user-select:none;transition:all .15s;position:relative;}
+.scard.on{border-color:var(--c1);background:rgba(0,229,255,.03);}
+.scard.on .sdot{background:var(--c1);box-shadow:0 0 5px var(--c1);}
+.scard.on .sname{color:var(--c1);}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--mu);display:inline-block;margin-right:6px;}
+.sname{font-family:var(--ui);font-size:12px;font-weight:600;letter-spacing:1px;color:var(--tx);}
+.smeta{margin-top:3px;display:flex;gap:5px;align-items:center;}
+.stype{font-size:9px;color:var(--mu);}
+.stag{font-size:9px;letter-spacing:1px;}
+.tag-direct{color:var(--c3);}
+.tag-proxy{color:var(--c4);}
+.tag-key{color:var(--c5);}
+.sstatus{position:absolute;top:5px;right:7px;font-size:10px;}
+.st-ok{color:var(--c3);}
+.st-er{color:var(--c2);}
+.st-run{color:var(--c4);}
+.st-sk{color:var(--mu);}
 
-  /* Stats */
-  .stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-bottom:18px;}
-  @media(max-width:800px){.stats-row{grid-template-columns:repeat(3,1fr);}}
-  .stat-card{background:var(--surface);border:1px solid var(--border);padding:13px 15px;position:relative;overflow:hidden;}
-  .stat-card::after{content:'';position:absolute;top:0;left:0;width:3px;height:100%;}
-  .stat-card:nth-child(1)::after{background:var(--accent);}
-  .stat-card:nth-child(2)::after{background:var(--accent2);}
-  .stat-card:nth-child(3)::after{background:var(--accent3);}
-  .stat-card:nth-child(4)::after{background:var(--accent4);}
-  .stat-card:nth-child(5)::after{background:#ce93d8;}
-  .stat-label{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px;}
-  .stat-value{font-family:var(--font-ui);font-size:26px;font-weight:700;}
-  .stat-card:nth-child(1) .stat-value{color:var(--accent);}
-  .stat-card:nth-child(2) .stat-value{color:var(--accent2);}
-  .stat-card:nth-child(3) .stat-value{color:var(--accent3);}
-  .stat-card:nth-child(4) .stat-value{color:var(--accent4);}
-  .stat-card:nth-child(5) .stat-value{color:#ce93d8;}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px;}
+@media(max-width:750px){.stats{grid-template-columns:repeat(3,1fr);}}
+.sc{background:var(--s1);border:1px solid var(--b);padding:12px 14px;position:relative;overflow:hidden;}
+.sc::after{content:'';position:absolute;top:0;left:0;width:3px;height:100%;}
+.sc:nth-child(1)::after{background:var(--c1);}
+.sc:nth-child(2)::after{background:var(--c2);}
+.sc:nth-child(3)::after{background:var(--c3);}
+.sc:nth-child(4)::after{background:var(--c4);}
+.sc:nth-child(5)::after{background:var(--c5);}
+.sl{font-size:9px;color:var(--mu);letter-spacing:2px;text-transform:uppercase;margin-bottom:2px;}
+.sv{font-family:var(--ui);font-size:24px;font-weight:700;}
+.sc:nth-child(1) .sv{color:var(--c1);}
+.sc:nth-child(2) .sv{color:var(--c2);}
+.sc:nth-child(3) .sv{color:var(--c3);}
+.sc:nth-child(4) .sv{color:var(--c4);}
+.sc:nth-child(5) .sv{color:var(--c5);}
 
-  .progress-wrap{height:2px;background:var(--border);margin-bottom:16px;display:none;}
-  .progress-wrap.visible{display:block;}
-  .progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent3));width:0%;transition:width .3s ease;}
+.pbar-wrap{height:2px;background:var(--b);margin-bottom:14px;display:none;}
+.pbar-wrap.on{display:block;}
+.pbar{height:100%;background:linear-gradient(90deg,var(--c1),var(--c3));width:0%;transition:width .3s;}
 
-  .log-area{background:var(--surface);border:1px solid var(--border);padding:11px 14px;height:115px;overflow-y:auto;margin-bottom:16px;font-size:11px;line-height:1.9;display:none;}
-  .log-area.visible{display:block;}
-  .log-line.ok{color:var(--accent3);}
-  .log-line.err{color:var(--accent2);}
-  .log-line.info{color:var(--accent);}
-  .log-line.warn{color:var(--accent4);}
-  .log-line{color:var(--muted);}
+.log{background:var(--s1);border:1px solid var(--b);padding:10px 13px;height:130px;overflow-y:auto;margin-bottom:14px;font-size:11px;line-height:1.85;display:none;}
+.log.on{display:block;}
+.ll{color:var(--mu);}
+.ll.ok{color:var(--c3);}
+.ll.er{color:var(--c2);}
+.ll.in{color:var(--c1);}
+.ll.wn{color:var(--c4);}
 
-  .filter-bar{display:flex;gap:9px;margin-bottom:12px;align-items:center;flex-wrap:wrap;}
-  .filter-input{background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:12px;padding:7px 12px;outline:none;width:240px;}
-  .filter-input:focus{border-color:var(--accent);}
-  .filter-label{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
-  select{background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:12px;padding:7px 11px;outline:none;cursor:pointer;}
+.fbar{display:flex;gap:8px;margin-bottom:11px;align-items:center;flex-wrap:wrap;}
+.fi{background:var(--s1);border:1px solid var(--b);color:var(--tx);font-family:var(--mono);font-size:12px;padding:7px 11px;outline:none;width:230px;}
+.fi:focus{border-color:var(--c1);}
+.flbl{font-size:10px;color:var(--mu);letter-spacing:1px;text-transform:uppercase;}
+select{background:var(--s1);border:1px solid var(--b);color:var(--tx);font-family:var(--mono);font-size:12px;padding:7px 10px;outline:none;cursor:pointer;}
 
-  .table-wrap{background:var(--surface);border:1px solid var(--border);overflow:auto;max-height:490px;}
-  table{width:100%;border-collapse:collapse;font-size:12px;}
-  thead{position:sticky;top:0;background:#0e1520;z-index:10;}
-  th{text-align:left;padding:10px 13px;color:var(--accent);font-family:var(--font-ui);font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;}
-  th:hover{color:#fff;}
-  td{padding:8px 13px;border-bottom:1px solid rgba(30,42,54,.5);vertical-align:middle;}
-  tr:hover td{background:rgba(0,229,255,.025);}
-  .sub-cell{color:var(--accent3);}
-  .sub-cell a{color:inherit;text-decoration:none;}
-  .sub-cell a:hover{text-decoration:underline;}
+.tw{background:var(--s1);border:1px solid var(--b);overflow:auto;max-height:480px;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead{position:sticky;top:0;background:#0b1219;z-index:10;}
+th{text-align:left;padding:10px 12px;color:var(--c1);font-family:var(--ui);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid var(--b);white-space:nowrap;cursor:pointer;}
+th:hover{color:#fff;}
+td{padding:8px 12px;border-bottom:1px solid rgba(30,42,54,.45);vertical-align:middle;}
+tr:hover td{background:rgba(0,229,255,.02);}
+.tc{color:var(--c3);}
+.tc a{color:inherit;text-decoration:none;}
+.tc a:hover{text-decoration:underline;}
+.sbg{display:inline-block;padding:1px 6px;font-size:9px;letter-spacing:1px;text-transform:uppercase;border:1px solid;}
+.sbg-crtsh{color:#00e5ff;border-color:rgba(0,229,255,.3);background:rgba(0,229,255,.05);}
+.sbg-hackertarget{color:#ff4081;border-color:rgba(255,64,129,.3);background:rgba(255,64,129,.05);}
+.sbg-otx{color:#ffeb3b;border-color:rgba(255,235,59,.3);background:rgba(255,235,59,.05);}
+.sbg-urlscan{color:#ce93d8;border-color:rgba(206,147,216,.3);background:rgba(206,147,216,.05);}
+.sbg-wayback{color:#80cbc4;border-color:rgba(128,203,196,.3);background:rgba(128,203,196,.05);}
+.sbg-rapiddns{color:#ff9800;border-color:rgba(255,152,0,.3);background:rgba(255,152,0,.05);}
+.sbg-threatcrowd{color:#ef5350;border-color:rgba(239,83,80,.3);background:rgba(239,83,80,.05);}
+.sbg-virustotal{color:#42a5f5;border-color:rgba(66,165,245,.3);background:rgba(66,165,245,.05);}
+.sbg-securitytrails{color:#ab47bc;border-color:rgba(171,71,188,.3);background:rgba(171,71,188,.05);}
+.sbg-shodan{color:#ff7043;border-color:rgba(255,112,67,.3);background:rgba(255,112,67,.05);}
 
-  .sbadge{display:inline-block;padding:1px 7px;font-size:9px;letter-spacing:1px;text-transform:uppercase;border:1px solid;white-space:nowrap;}
-  .sbadge-crtsh{color:#00e5ff;border-color:rgba(0,229,255,.35);background:rgba(0,229,255,.05);}
-  .sbadge-hackertarget{color:#ff4081;border-color:rgba(255,64,129,.35);background:rgba(255,64,129,.05);}
-  .sbadge-otx{color:#ffeb3b;border-color:rgba(255,235,59,.35);background:rgba(255,235,59,.05);}
-  .sbadge-urlscan{color:#ce93d8;border-color:rgba(206,147,216,.35);background:rgba(206,147,216,.05);}
-  .sbadge-wayback{color:#80cbc4;border-color:rgba(128,203,196,.35);background:rgba(128,203,196,.05);}
-  .sbadge-rapiddns{color:#ff9800;border-color:rgba(255,152,0,.35);background:rgba(255,152,0,.05);}
-  .sbadge-threatcrowd{color:#ef5350;border-color:rgba(239,83,80,.35);background:rgba(239,83,80,.05);}
-  .sbadge-virustotal{color:#42a5f5;border-color:rgba(66,165,245,.35);background:rgba(66,165,245,.05);}
-  .sbadge-securitytrails{color:#ab47bc;border-color:rgba(171,71,188,.35);background:rgba(171,71,188,.05);}
-  .sbadge-shodan{color:#ff7043;border-color:rgba(255,112,67,.35);background:rgba(255,112,67,.05);}
+.empty{text-align:center;padding:44px 20px;color:var(--mu);}
+.empty .ei{font-size:32px;margin-bottom:8px;}
+.empty p{font-size:11px;letter-spacing:2px;text-transform:uppercase;}
 
-  .empty-state{text-align:center;padding:50px 20px;color:var(--muted);}
-  .empty-state .icon{font-size:34px;margin-bottom:10px;}
-  .empty-state p{font-size:11px;letter-spacing:2px;text-transform:uppercase;}
-
-  @keyframes spin{to{transform:rotate(360deg);}}
-  @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-  .spinner{display:inline-block;width:10px;height:10px;border:2px solid var(--accent);border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:5px;}
-  .blink{animation:blink 1s infinite;}
-
-  ::-webkit-scrollbar{width:5px;height:5px;}
-  ::-webkit-scrollbar-track{background:var(--bg);}
-  ::-webkit-scrollbar-thumb{background:var(--border);}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+.spin{display:inline-block;width:10px;height:10px;border:2px solid var(--c1);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:5px;}
+.blink{animation:blink 1s infinite;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--b);}
 </style>
 </head>
 <body>
 
 <header>
   <div>
-    <div class="logo">Sub<span>Recon</span></div>
-    <div class="logo-sub">PASSIVE SUBDOMAIN ENUMERATION ENGINE</div>
+    <div class="logo">Sub<em>Recon</em></div>
+    <div style="font-size:9px;color:var(--mu);letter-spacing:2px;margin-top:2px;">PASSIVE SUBDOMAIN ENUMERATION</div>
   </div>
-  <div class="version-badge">V3.0 — CORS FIXED</div>
+  <div class="hbadge">V5 · 10 SOURCES · </div>
 </header>
 
 <main>
 
-  <div class="notice">
-    <span class="notice-icon">⚡</span>
-    <div>
-      <strong>CORS Fix Applied:</strong> Sources marked <span style="color:var(--accent4)">PROXY</span> route through <code>api.allorigins.win</code> to bypass browser CORS restrictions.
-      Sources marked <span style="color:var(--accent3)">DIRECT</span> connect natively. Sources marked <span style="color:#ce93d8">KEY</span> require your API key.
-      If a proxy source fails, it auto-retries through a backup proxy.
+<div class="alert alert-info">
+  <span style="font-size:15px;flex-shrink:0;">ℹ</span>
+  <span>
+    <strong>Connection modes:</strong>
+    <span style="color:var(--c3)">DIRECT</span> = browser connects natively &nbsp;|&nbsp;
+    <span style="color:var(--c4)">PROXY</span> = routed via CORS proxy (3 fallbacks) &nbsp;|&nbsp;
+    <span style="color:var(--c5)">KEY</span> = requires your API key. Each card shows live status during scan.
+  </span>
+</div>
+
+<!-- API Keys -->
+<div class="panel">
+  <div class="panel-head" onclick="togglePanel()">
+    <span style="color:var(--c4);">⚙</span>
+    <span class="panel-title">API Keys</span>
+    <span class="panel-sub">optional · VirusTotal · SecurityTrails · Shodan ▾</span>
+  </div>
+  <div class="panel-body" id="pbody">
+    <div class="krow">
+      <div class="klabel">VirusTotal <span class="kb-free">FREE TIER</span></div>
+      <input class="kinput" id="kVT" type="password" placeholder="virustotal.com → My API key">
     </div>
-  </div>
-
-  <!-- API Keys -->
-  <div class="keys-panel">
-    <div class="keys-header" onclick="toggleKeys()">
-      <span style="color:var(--accent4)">⚙</span>
-      <span class="keys-title">API Keys (Optional)</span>
-      <span class="keys-sub">VirusTotal · SecurityTrails · Shodan &nbsp;▼</span>
+    <div class="krow">
+      <div class="klabel">SecurityTrails <span class="kb-paid">PAID</span></div>
+      <input class="kinput" id="kST" type="password" placeholder="securitytrails.com → Dashboard → API Key">
     </div>
-    <div class="keys-body" id="keysBody">
-      <div class="key-row">
-        <div class="key-label">VirusTotal API Key <span class="badge-free">FREE TIER</span></div>
-        <input class="key-input" id="keyVT" type="password" placeholder="vt api key — virustotal.com → My API key">
-      </div>
-      <div class="key-row">
-        <div class="key-label">SecurityTrails API Key <span class="badge-paid">PAID</span></div>
-        <input class="key-input" id="keyST" type="password" placeholder="securitytrails.com → Dashboard → API Key">
-      </div>
-      <div class="key-row">
-        <div class="key-label">Shodan API Key <span class="badge-paid">PAID</span></div>
-        <input class="key-input" id="keyShodan" type="password" placeholder="account.shodan.io → My Account → API Key">
-      </div>
-      <div style="grid-column:1/-1;font-size:10px;color:var(--muted)">
-        ⓘ Keys stored in memory only — sent directly to each API, never to any proxy.
-      </div>
+    <div class="krow">
+      <div class="klabel">Shodan <span class="kb-paid">PAID</span></div>
+      <input class="kinput" id="kSH" type="password" placeholder="account.shodan.io → My Account → API Key">
     </div>
+    <div style="grid-column:1/-1;font-size:10px;color:var(--mu);">⚠ Keys stored in memory only — sent directly to each API, never to any proxy.</div>
   </div>
+</div>
 
-  <!-- Input -->
-  <div class="input-row">
-    <div class="input-wrap">
-      <input type="text" class="domain-input" id="domainInput" placeholder="example.com" autocomplete="off" spellcheck="false">
-    </div>
-    <button class="btn btn-scan" id="scanBtn" onclick="startScan()">Enumerate</button>
-    <button class="btn btn-export" id="exportBtn" onclick="exportResults()" disabled>Export</button>
-    <button class="btn btn-clear" onclick="clearAll()">Clear</button>
+<!-- Input -->
+<div class="irow">
+  <div class="iwrap">
+    <input type="text" class="di" id="domIn" placeholder="bytedance.com" autocomplete="off" spellcheck="false">
   </div>
+  <button class="btn b-go" id="btnGo" onclick="startScan()">Enumerate</button>
+  <button class="btn b-ex" id="btnEx" onclick="doExport()" disabled>Export</button>
+  <button class="btn b-cl" onclick="doClear()">Clear</button>
+</div>
 
-  <!-- Sources -->
-  <div class="sources-grid" id="sourcesGrid"></div>
+<!-- Sources -->
+<div class="sgrid" id="sgrid"></div>
 
-  <!-- Stats -->
-  <div class="stats-row">
-    <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value" id="statTotal">0</div></div>
-    <div class="stat-card"><div class="stat-label">Unique</div><div class="stat-value" id="statUnique">0</div></div>
-    <div class="stat-card"><div class="stat-label">Sources</div><div class="stat-value" id="statSources">0</div></div>
-    <div class="stat-card"><div class="stat-label">Wildcards</div><div class="stat-value" id="statWildcards">0</div></div>
-    <div class="stat-card"><div class="stat-label">Time</div><div class="stat-value" id="statTime">—</div></div>
-  </div>
+<!-- Stats -->
+<div class="stats">
+  <div class="sc"><div class="sl">Total</div><div class="sv" id="sTotal">0</div></div>
+  <div class="sc"><div class="sl">Unique</div><div class="sv" id="sUniq">0</div></div>
+  <div class="sc"><div class="sl">Sources Hit</div><div class="sv" id="sSrc">0</div></div>
+  <div class="sc"><div class="sl">Wildcards</div><div class="sv" id="sWild">0</div></div>
+  <div class="sc"><div class="sl">Time</div><div class="sv" id="sTime">—</div></div>
+</div>
 
-  <div class="progress-wrap" id="progressWrap"><div class="progress-bar" id="progressBar"></div></div>
-  <div class="log-area" id="logArea"></div>
+<div class="pbar-wrap" id="pbw"><div class="pbar" id="pb"></div></div>
+<div class="log" id="logEl"></div>
 
-  <div class="filter-bar">
-    <span class="filter-label">Filter:</span>
-    <input type="text" class="filter-input" id="filterInput" placeholder="grep subdomains..." oninput="applyFilter()">
-    <select id="sourceFilter" onchange="applyFilter()"><option value="">All Sources</option></select>
-    <span class="filter-label" id="filterCount" style="color:var(--accent)"></span>
-  </div>
+<!-- Filter -->
+<div class="fbar">
+  <span class="flbl">Filter:</span>
+  <input type="text" class="fi" id="fq" placeholder="grep subdomains..." oninput="applyFilter()">
+  <select id="fsrc" onchange="applyFilter()"><option value="">All Sources</option></select>
+  <span class="flbl" id="fcnt" style="color:var(--c1)"></span>
+</div>
 
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th style="width:42px">#</th>
-          <th onclick="sortBy('subdomain')">Subdomain ↕</th>
-          <th onclick="sortBy('source')">Source ↕</th>
-          <th>Quick Actions</th>
-        </tr>
-      </thead>
-      <tbody id="resultsBody">
-        <tr><td colspan="4"><div class="empty-state"><div class="icon">🛰️</div><p>Enter a domain and hit Enumerate</p></div></td></tr>
-      </tbody>
-    </table>
-  </div>
+<!-- Table -->
+<div class="tw">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:40px">#</th>
+        <th onclick="sortBy('sub')">Subdomain ↕</th>
+        <th onclick="sortBy('src')">Source ↕</th>
+        <th>Quick Actions</th>
+      </tr>
+    </thead>
+    <tbody id="tbody">
+      <tr><td colspan="4"><div class="empty"><div class="ei">🛰️</div><p>Enter a domain and hit Enumerate</p></div></td></tr>
+    </tbody>
+  </table>
+</div>
 
 </main>
 
 <script>
-// ─── CORS Proxies (tried in order on failure) ──────────────────────────
-const PROXIES = [
-  url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+// ─── KEY FIX: manual timeout — NO AbortSignal.timeout() ───────────────
+// AbortSignal.timeout() is not supported in older Chrome/Firefox versions
+// and causes "could not be cloned" errors in some environments.
+// This helper creates a plain AbortController with manual setTimeout.
+function fetchWithTimeout(url, opts, ms) {
+  ms = ms || 18000;
+  const controller = new AbortController();
+  const timer = setTimeout(function() { controller.abort(); }, ms);
+  const options = Object.assign({}, opts || {}, { signal: controller.signal });
+  return fetch(url, options).finally(function() { clearTimeout(timer); });
+}
+
+// ─── CORS PROXIES (3 fallbacks) ───────────────────────────────────────
+var PROXIES = [
+  function(u){ return 'https://api.allorigins.win/get?url=' + encodeURIComponent(u); },
+  function(u){ return 'https://corsproxy.io/?' + encodeURIComponent(u); },
+  function(u){ return 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u); }
 ];
 
-async function proxyFetch(url, parseJSON = true) {
-  let lastErr;
-  for (const proxyFn of PROXIES) {
+async function pFetch(url, asText) {
+  var lastErr = 'all proxies failed';
+  for (var i = 0; i < PROXIES.length; i++) {
     try {
-      const res = await fetch(proxyFn(url), { signal: AbortSignal.timeout(15000) });
-      if (!res.ok) throw new Error('Proxy HTTP ' + res.status);
-      const wrapper = await res.json();
-      // allorigins wraps in {contents:...}, corsproxy returns raw
-      const raw = wrapper.contents !== undefined ? wrapper.contents : JSON.stringify(wrapper);
-      if (!raw) throw new Error('Empty response');
-      return parseJSON ? JSON.parse(raw) : raw;
-    } catch(e) { lastErr = e; }
+      var r = await fetchWithTimeout(PROXIES[i](url), {}, 20000);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      var j = await r.json();
+      // allorigins wraps in {contents:...}; others return raw
+      var raw = (j && j.contents !== undefined) ? j.contents : (typeof j === 'string' ? j : JSON.stringify(j));
+      if (!raw || raw.trim() === '') throw new Error('empty response');
+      return asText ? raw : JSON.parse(raw);
+    } catch(e) { lastErr = e.message; }
   }
-  throw lastErr;
+  throw new Error(lastErr);
 }
 
-async function directFetch(url, opts={}) {
-  const res = await fetch(url, { ...opts, signal: AbortSignal.timeout(15000) });
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  return res;
+async function dFetch(url, opts) {
+  var r = await fetchWithTimeout(url, opts || {}, 18000);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r;
 }
 
-// ─── Sources config ────────────────────────────────────────────────────
-const SOURCES = [
-  { id:'crtsh',          name:'crt.sh',          type:'Cert Log',    method:'proxy',  needsKey:false },
-  { id:'hackertarget',   name:'HackerTarget',     type:'DNS Search',  method:'direct', needsKey:false },
-  { id:'otx',            name:'AlienVault OTX',   type:'Threat Intel',method:'direct', needsKey:false },
-  { id:'urlscan',        name:'urlscan.io',       type:'URL Scanner', method:'proxy',  needsKey:false },
-  { id:'wayback',        name:'Wayback CDX',      type:'Archive',     method:'proxy',  needsKey:false },
-  { id:'rapiddns',       name:'RapidDNS',         type:'Passive DNS', method:'proxy',  needsKey:false },
-  { id:'threatcrowd',    name:'ThreatCrowd',      type:'Threat Intel',method:'proxy',  needsKey:false },
-  { id:'virustotal',     name:'VirusTotal',       type:'Passive DNS', method:'direct', needsKey:true, keyId:'keyVT'     },
-  { id:'securitytrails', name:'SecurityTrails',   type:'Passive DNS', method:'direct', needsKey:true, keyId:'keyST'     },
-  { id:'shodan',         name:'Shodan',           type:'Port+DNS',    method:'direct', needsKey:true, keyId:'keyShodan' },
+// ─── SOURCES ──────────────────────────────────────────────────────────
+var SRCS = [
+  {id:'crtsh',         name:'crt.sh',        type:'Cert Log',    via:'proxy',  key:null, active:true},
+  {id:'hackertarget',  name:'HackerTarget',   type:'DNS Search',  via:'direct', key:null, active:true},
+  {id:'otx',           name:'AlienVault OTX', type:'Threat Intel',via:'direct', key:null, active:true},
+  {id:'urlscan',       name:'urlscan.io',     type:'URL Scanner', via:'proxy',  key:null, active:true},
+  {id:'wayback',       name:'Wayback CDX',    type:'Archive',     via:'proxy',  key:null, active:true},
+  {id:'rapiddns',      name:'RapidDNS',       type:'Passive DNS', via:'proxy',  key:null, active:true},
+  {id:'threatcrowd',   name:'ThreatCrowd',    type:'Threat Intel',via:'proxy',  key:null, active:true},
+  {id:'virustotal',    name:'VirusTotal',     type:'Passive DNS', via:'direct', key:'kVT', active:true},
+  {id:'securitytrails',name:'SecurityTrails', type:'Passive DNS', via:'direct', key:'kST', active:true},
+  {id:'shodan',        name:'Shodan',         type:'Port+DNS',    via:'direct', key:'kSH', active:true},
 ];
 
-let allResults=[], filtered=[], scanning=false, sortCol='subdomain', sortAsc=true;
-SOURCES.forEach(s => s.active = true);
+var results = [], filtered = [], running = false, sortCol = 'sub', sortAsc = true;
 
 // Build source cards
-const grid = document.getElementById('sourcesGrid');
-SOURCES.forEach(s => {
-  const el = document.createElement('div');
-  el.className = 'src-card active';
-  el.id = 'src_' + s.id;
-  const statusClass = s.needsKey ? 'cors-key' : (s.method === 'direct' ? 'cors-ok' : 'cors-proxy');
-  const statusLabel = s.needsKey ? 'KEY' : (s.method === 'direct' ? 'DIRECT' : 'PROXY');
-  el.innerHTML = `
-    <div class="src-card-top"><span class="src-dot"></span><span class="src-name">${s.name}</span></div>
-    <div class="src-meta"><span class="src-type">${s.type}</span><span class="src-status ${statusClass}">${statusLabel}</span></div>`;
-  el.onclick = () => { s.active=!s.active; el.classList.toggle('active',s.active); };
-  grid.appendChild(el);
+var sg = document.getElementById('sgrid');
+SRCS.forEach(function(s) {
+  var d = document.createElement('div');
+  d.className = 'scard on';
+  d.id = 'sc_' + s.id;
+  var tc = s.key ? 'tag-key' : (s.via === 'direct' ? 'tag-direct' : 'tag-proxy');
+  var tt = s.key ? 'KEY' : (s.via === 'direct' ? 'DIRECT' : 'PROXY');
+  d.innerHTML = '<div style="display:flex;align-items:center"><span class="sdot"></span><span class="sname">' + s.name + '</span></div>'
+    + '<div class="smeta"><span class="stype">' + s.type + '</span><span class="stag ' + tc + '">' + tt + '</span></div>'
+    + '<div class="sstatus" id="st_' + s.id + '"></div>';
+  d.onclick = function() { s.active = !s.active; d.classList.toggle('on', s.active); };
+  sg.appendChild(d);
 });
 
-function toggleKeys() {
-  document.getElementById('keysBody').classList.toggle('open');
+function togglePanel() {
+  document.getElementById('pbody').classList.toggle('open');
 }
 
-function log(msg, type='') {
-  const area = document.getElementById('logArea');
-  area.classList.add('visible');
-  const line = document.createElement('div');
-  line.className = 'log-line ' + type;
-  line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-  area.appendChild(line);
-  area.scrollTop = area.scrollHeight;
+function addLog(msg, type) {
+  var el = document.getElementById('logEl');
+  el.classList.add('on');
+  var d = document.createElement('div');
+  d.className = 'll ' + (type || '');
+  var t = new Date().toLocaleTimeString();
+  d.textContent = '[' + t + '] ' + msg;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
 }
 
-function setProgress(pct) {
-  document.getElementById('progressWrap').classList.add('visible');
-  document.getElementById('progressBar').style.width = pct + '%';
+function setProgress(p) {
+  document.getElementById('pbw').classList.add('on');
+  document.getElementById('pb').style.width = p + '%';
 }
 
-function updateStats(elapsed) {
-  const unique = [...new Set(allResults.map(r=>r.subdomain))];
-  const sources = [...new Set(allResults.map(r=>r.source))];
-  document.getElementById('statTotal').textContent = allResults.length;
-  document.getElementById('statUnique').textContent = unique.length;
-  document.getElementById('statSources').textContent = sources.length;
-  document.getElementById('statWildcards').textContent = unique.filter(s=>s.startsWith('*')).length;
-  if (elapsed !== undefined) document.getElementById('statTime').textContent = (elapsed/1000).toFixed(1)+'s';
+function setSt(id, cls, txt) {
+  var el = document.getElementById('st_' + id);
+  if (el) { el.className = 'sstatus ' + cls; el.textContent = txt; }
 }
 
-// ─── Fetchers ──────────────────────────────────────────────────────────
+function updateStats(ms) {
+  var u = Array.from(new Set(results.map(function(r){ return r.sub; })));
+  var s = Array.from(new Set(results.map(function(r){ return r.src; })));
+  document.getElementById('sTotal').textContent = results.length;
+  document.getElementById('sUniq').textContent = u.length;
+  document.getElementById('sSrc').textContent = s.length;
+  document.getElementById('sWild').textContent = u.filter(function(x){ return x.startsWith('*'); }).length;
+  if (ms != null) document.getElementById('sTime').textContent = (ms / 1000).toFixed(1) + 's';
+}
 
-async function fetchCrtSh(domain) {
-  log('crt.sh → certificate transparency (via proxy)...', 'info');
+// ─── FETCHERS ─────────────────────────────────────────────────────────
+
+async function fCrtSh(dom) {
+  addLog('crt.sh → certificate transparency (proxy)...', 'in');
+  setSt('crtsh', 'st-run', '...');
   try {
-    const data = await proxyFetch(`https://crt.sh/?q=%.${domain}&output=json`);
-    const subs = new Set();
-    data.forEach(e => e.name_value.split('\n').forEach(n => {
-      n = n.trim().toLowerCase();
-      if (n && (n.endsWith('.'+domain) || n===domain)) subs.add(n);
-    }));
-    log(`crt.sh → ${subs.size} subdomains ✓`, 'ok');
-    return [...subs].map(s=>({subdomain:s,source:'crtsh'}));
-  } catch(e) { log(`crt.sh failed: ${e.message}`, 'err'); return []; }
-}
-
-async function fetchHackerTarget(domain) {
-  log('HackerTarget → DNS search (direct)...', 'info');
-  try {
-    const res = await directFetch(`https://api.hackertarget.com/hostsearch/?q=${domain}`);
-    const text = await res.text();
-    if (text.includes('error')||text.includes('API count')) throw new Error(text.trim().slice(0,60));
-    const subs = new Set(text.trim().split('\n').map(l=>l.split(',')[0].trim().toLowerCase()).filter(s=>s&&s.endsWith('.'+domain)));
-    log(`HackerTarget → ${subs.size} subdomains ✓`, 'ok');
-    return [...subs].map(s=>({subdomain:s,source:'hackertarget'}));
-  } catch(e) { log(`HackerTarget failed: ${e.message}`, 'err'); return []; }
-}
-
-async function fetchOTX(domain) {
-  log('AlienVault OTX → threat intel passive DNS (direct)...', 'info');
-  try {
-    const res = await directFetch(`https://otx.alienvault.com/api/v1/indicators/domain/${domain}/passive_dns`);
-    const data = await res.json();
-    const subs = new Set((data.passive_dns||[]).map(e=>e.hostname.trim().toLowerCase()).filter(s=>s&&(s.endsWith('.'+domain)||s===domain)));
-    log(`AlienVault OTX → ${subs.size} subdomains ✓`, 'ok');
-    return [...subs].map(s=>({subdomain:s,source:'otx'}));
-  } catch(e) { log(`OTX failed: ${e.message}`, 'err'); return []; }
-}
-
-async function fetchUrlScan(domain) {
-  log('urlscan.io → scan database (via proxy)...', 'info');
-  try {
-    const data = await proxyFetch(`https://urlscan.io/api/v1/search/?q=domain:${domain}&size=200`);
-    const subs = new Set((data.results||[]).map(r=>{try{return new URL(r.page.url).hostname.toLowerCase();}catch{return '';}}).filter(s=>s&&(s.endsWith('.'+domain)||s===domain)));
-    log(`urlscan.io → ${subs.size} subdomains ✓`, 'ok');
-    return [...subs].map(s=>({subdomain:s,source:'urlscan'}));
-  } catch(e) { log(`urlscan.io failed: ${e.message}`, 'err'); return []; }
-}
-
-async function fetchWayback(domain) {
-  log('Wayback CDX → archive (via proxy)...', 'info');
-  try {
-    const data = await proxyFetch(`https://web.archive.org/cdx/search/cdx?url=*.${domain}/*&output=json&fl=original&collapse=urlkey&limit=2000`);
-    const subs = new Set();
-    (Array.isArray(data) ? data : []).slice(1).forEach(row=>{
-      try { const h=new URL(row[0]).hostname.toLowerCase(); if(h.endsWith('.'+domain)||h===domain) subs.add(h); } catch{}
+    var data = await pFetch('https://crt.sh/?q=%.' + dom + '&output=json');
+    if (!Array.isArray(data)) throw new Error('unexpected format');
+    var s = new Set();
+    data.forEach(function(e) {
+      (e.name_value || '').split('\n').forEach(function(n) {
+        n = n.trim().toLowerCase();
+        if (n && (n.endsWith('.' + dom) || n === dom)) s.add(n);
+      });
     });
-    log(`Wayback CDX → ${subs.size} subdomains ✓`, 'ok');
-    return [...subs].map(s=>({subdomain:s,source:'wayback'}));
-  } catch(e) { log(`Wayback failed: ${e.message}`, 'err'); return []; }
+    addLog('crt.sh → ' + s.size + ' subdomains ✓', 'ok');
+    setSt('crtsh', 'st-ok', '✓');
+    return Array.from(s).map(function(x){ return {sub:x, src:'crtsh'}; });
+  } catch(e) { addLog('crt.sh ✗ ' + e.message, 'er'); setSt('crtsh','st-er','✗'); return []; }
 }
 
-async function fetchRapidDNS(domain) {
-  log('RapidDNS → passive DNS (via proxy)...', 'info');
+async function fHT(dom) {
+  addLog('HackerTarget → DNS host search (direct)...', 'in');
+  setSt('hackertarget', 'st-run', '...');
   try {
-    const text = await proxyFetch(`https://rapiddns.io/subdomain/${domain}?full=1`, false);
-    const matches = [...text.matchAll(/([a-z0-9_-]+(?:\.[a-z0-9_-]+)*\.' + domain.replace(/\./g,'\\.')+r')/gi)];
-    const subs = new Set(matches.map(m=>m[0].toLowerCase()).filter(s=>s.endsWith('.'+domain)));
-    // fallback: regex over raw HTML
-    const re = new RegExp(`([a-z0-9._-]+\\.${domain.replace(/\./g,'\\.')})`, 'gi');
-    const all = text.match(re) || [];
-    all.forEach(s=>{ s=s.toLowerCase(); if(s!==domain&&s.endsWith('.'+domain)) subs.add(s); });
-    log(`RapidDNS → ${subs.size} subdomains ✓`, 'ok');
-    return [...subs].map(s=>({subdomain:s,source:'rapiddns'}));
-  } catch(e) { log(`RapidDNS failed: ${e.message}`, 'err'); return []; }
+    var r = await dFetch('https://api.hackertarget.com/hostsearch/?q=' + dom);
+    var t = await r.text();
+    if (t.includes('API count') || t.includes('error')) throw new Error(t.slice(0, 80));
+    var s = new Set(t.trim().split('\n').map(function(l){ return l.split(',')[0].trim().toLowerCase(); }).filter(function(x){ return x && x.endsWith('.' + dom); }));
+    addLog('HackerTarget → ' + s.size + ' subdomains ✓', 'ok');
+    setSt('hackertarget', 'st-ok', '✓');
+    return Array.from(s).map(function(x){ return {sub:x, src:'hackertarget'}; });
+  } catch(e) { addLog('HackerTarget ✗ ' + e.message, 'er'); setSt('hackertarget','st-er','✗'); return []; }
 }
 
-async function fetchThreatCrowd(domain) {
-  log('ThreatCrowd → threat intelligence (via proxy)...', 'info');
+async function fOTX(dom) {
+  addLog('AlienVault OTX → passive DNS (direct)...', 'in');
+  setSt('otx', 'st-run', '...');
   try {
-    const data = await proxyFetch(`https://www.threatcrowd.org/searchApi/v2/domain/report/?domain=${domain}`);
-    const subs = new Set((data.subdomains||[]).map(s=>s.trim().toLowerCase()).filter(s=>s&&(s.endsWith('.'+domain)||s===domain)));
-    log(`ThreatCrowd → ${subs.size} subdomains ✓`, 'ok');
-    return [...subs].map(s=>({subdomain:s,source:'threatcrowd'}));
-  } catch(e) { log(`ThreatCrowd failed: ${e.message}`, 'err'); return []; }
+    var r = await dFetch('https://otx.alienvault.com/api/v1/indicators/domain/' + dom + '/passive_dns');
+    var d = await r.json();
+    var s = new Set((d.passive_dns || []).map(function(e){ return (e.hostname || '').trim().toLowerCase(); }).filter(function(x){ return x && (x.endsWith('.' + dom) || x === dom); }));
+    addLog('AlienVault OTX → ' + s.size + ' subdomains ✓', 'ok');
+    setSt('otx', 'st-ok', '✓');
+    return Array.from(s).map(function(x){ return {sub:x, src:'otx'}; });
+  } catch(e) { addLog('OTX ✗ ' + e.message, 'er'); setSt('otx','st-er','✗'); return []; }
 }
 
-async function fetchVirusTotal(domain, key) {
-  if (!key) { log('VirusTotal → skipped (no API key set)', 'warn'); return []; }
-  log('VirusTotal → passive DNS (direct, authenticated)...', 'info');
+async function fUrlScan(dom) {
+  addLog('urlscan.io → scan database (proxy)...', 'in');
+  setSt('urlscan', 'st-run', '...');
   try {
-    const res = await fetch(`https://www.virustotal.com/api/v3/domains/${domain}/subdomains?limit=40`, {
-      headers: { 'x-apikey': key }, signal: AbortSignal.timeout(15000)
+    var data = await pFetch('https://urlscan.io/api/v1/search/?q=domain:' + dom + '&size=200');
+    var s = new Set((data.results || []).map(function(r){ try { return new URL(r.page.url).hostname.toLowerCase(); } catch(e) { return ''; } }).filter(function(x){ return x && (x.endsWith('.' + dom) || x === dom); }));
+    addLog('urlscan.io → ' + s.size + ' subdomains ✓', 'ok');
+    setSt('urlscan', 'st-ok', '✓');
+    return Array.from(s).map(function(x){ return {sub:x, src:'urlscan'}; });
+  } catch(e) { addLog('urlscan.io ✗ ' + e.message, 'er'); setSt('urlscan','st-er','✗'); return []; }
+}
+
+async function fWayback(dom) {
+  addLog('Wayback CDX → web archive (proxy)...', 'in');
+  setSt('wayback', 'st-run', '...');
+  try {
+    var data = await pFetch('https://web.archive.org/cdx/search/cdx?url=*.' + dom + '/*&output=json&fl=original&collapse=urlkey&limit=2000');
+    var s = new Set();
+    (Array.isArray(data) ? data : []).slice(1).forEach(function(row) {
+      try { var h = new URL(row[0]).hostname.toLowerCase(); if (h.endsWith('.' + dom) || h === dom) s.add(h); } catch(e) {}
     });
-    if (!res.ok) throw new Error('HTTP '+res.status+' — verify your API key');
-    const data = await res.json();
-    const subs = new Set((data.data||[]).map(e=>e.id.trim().toLowerCase()).filter(s=>s&&(s.endsWith('.'+domain)||s===domain)));
-    log(`VirusTotal → ${subs.size} subdomains ✓`, 'ok');
-    return [...subs].map(s=>({subdomain:s,source:'virustotal'}));
-  } catch(e) { log(`VirusTotal failed: ${e.message}`, 'err'); return []; }
+    addLog('Wayback CDX → ' + s.size + ' subdomains ✓', 'ok');
+    setSt('wayback', 'st-ok', '✓');
+    return Array.from(s).map(function(x){ return {sub:x, src:'wayback'}; });
+  } catch(e) { addLog('Wayback ✗ ' + e.message, 'er'); setSt('wayback','st-er','✗'); return []; }
 }
 
-async function fetchSecurityTrails(domain, key) {
-  if (!key) { log('SecurityTrails → skipped (no API key set)', 'warn'); return []; }
-  log('SecurityTrails → passive DNS (direct, authenticated)...', 'info');
+async function fRapidDNS(dom) {
+  addLog('RapidDNS → passive DNS (proxy)...', 'in');
+  setSt('rapiddns', 'st-run', '...');
   try {
-    const res = await fetch(`https://api.securitytrails.com/v1/domain/${domain}/subdomains?children_only=false&include_inactive=true`, {
-      headers: { 'APIKEY': key }, signal: AbortSignal.timeout(15000)
-    });
-    if (!res.ok) throw new Error('HTTP '+res.status+' — verify your API key');
-    const data = await res.json();
-    const subs = new Set((data.subdomains||[]).map(s=>(s.trim().toLowerCase()+'.'+domain)));
-    log(`SecurityTrails → ${subs.size} subdomains ✓`, 'ok');
-    return [...subs].map(s=>({subdomain:s,source:'securitytrails'}));
-  } catch(e) { log(`SecurityTrails failed: ${e.message}`, 'err'); return []; }
+    var text = await pFetch('https://rapiddns.io/subdomain/' + dom + '?full=1', true);
+    var escaped = dom.replace(/\./g, '\\.');
+    var re = new RegExp('([a-z0-9_-]+(?:\\.[a-z0-9_-]+)*\\.' + escaped + ')(?:[^a-z0-9.-]|$)', 'gi');
+    var matches = text.match(re) || [];
+    var s = new Set(matches.map(function(m){ return m.replace(/[^a-z0-9._-]/gi,'').toLowerCase(); }).filter(function(x){ return x && x.endsWith('.' + dom) && x !== dom; }));
+    addLog('RapidDNS → ' + s.size + ' subdomains ✓', 'ok');
+    setSt('rapiddns', 'st-ok', '✓');
+    return Array.from(s).map(function(x){ return {sub:x, src:'rapiddns'}; });
+  } catch(e) { addLog('RapidDNS ✗ ' + e.message, 'er'); setSt('rapiddns','st-er','✗'); return []; }
 }
 
-async function fetchShodan(domain, key) {
-  if (!key) { log('Shodan → skipped (no API key set)', 'warn'); return []; }
-  log('Shodan → DNS + port recon (direct, authenticated)...', 'info');
+async function fThreatCrowd(dom) {
+  addLog('ThreatCrowd → threat intel (proxy)...', 'in');
+  setSt('threatcrowd', 'st-run', '...');
   try {
-    const res = await fetch(`https://api.shodan.io/dns/domain/${domain}?key=${key}`, { signal: AbortSignal.timeout(15000) });
-    if (!res.ok) throw new Error('HTTP '+res.status+' — verify your API key');
-    const data = await res.json();
-    const subs = new Set((data.subdomains||[]).map(s=>(s.trim().toLowerCase()+'.'+domain)));
-    log(`Shodan → ${subs.size} subdomains ✓`, 'ok');
-    return [...subs].map(s=>({subdomain:s,source:'shodan'}));
-  } catch(e) { log(`Shodan failed: ${e.message}`, 'err'); return []; }
+    var data = await pFetch('https://www.threatcrowd.org/searchApi/v2/domain/report/?domain=' + dom);
+    var s = new Set((data.subdomains || []).map(function(x){ return x.trim().toLowerCase(); }).filter(function(x){ return x && (x.endsWith('.' + dom) || x === dom); }));
+    addLog('ThreatCrowd → ' + s.size + ' subdomains ✓', 'ok');
+    setSt('threatcrowd', 'st-ok', '✓');
+    return Array.from(s).map(function(x){ return {sub:x, src:'threatcrowd'}; });
+  } catch(e) { addLog('ThreatCrowd ✗ ' + e.message, 'er'); setSt('threatcrowd','st-er','✗'); return []; }
 }
 
-// ─── Orchestrator ──────────────────────────────────────────────────────
+async function fVT(dom, key) {
+  if (!key) { addLog('VirusTotal → skipped (no key)', 'wn'); setSt('virustotal','st-sk','—'); return []; }
+  addLog('VirusTotal → passive DNS (direct+key)...', 'in');
+  setSt('virustotal', 'st-run', '...');
+  try {
+    var r = await fetchWithTimeout('https://www.virustotal.com/api/v3/domains/' + dom + '/subdomains?limit=40', { headers: { 'x-apikey': key } }, 18000);
+    if (!r.ok) throw new Error('HTTP ' + r.status + ' — check key');
+    var d = await r.json();
+    var s = new Set((d.data || []).map(function(e){ return (e.id || '').trim().toLowerCase(); }).filter(function(x){ return x && (x.endsWith('.' + dom) || x === dom); }));
+    addLog('VirusTotal → ' + s.size + ' subdomains ✓', 'ok');
+    setSt('virustotal', 'st-ok', '✓');
+    return Array.from(s).map(function(x){ return {sub:x, src:'virustotal'}; });
+  } catch(e) { addLog('VirusTotal ✗ ' + e.message, 'er'); setSt('virustotal','st-er','✗'); return []; }
+}
 
+async function fST(dom, key) {
+  if (!key) { addLog('SecurityTrails → skipped (no key)', 'wn'); setSt('securitytrails','st-sk','—'); return []; }
+  addLog('SecurityTrails → passive DNS (direct+key)...', 'in');
+  setSt('securitytrails', 'st-run', '...');
+  try {
+    var r = await fetchWithTimeout('https://api.securitytrails.com/v1/domain/' + dom + '/subdomains?children_only=false&include_inactive=true', { headers: { 'APIKEY': key } }, 18000);
+    if (!r.ok) throw new Error('HTTP ' + r.status + ' — check key');
+    var d = await r.json();
+    var s = new Set((d.subdomains || []).map(function(x){ return x.trim().toLowerCase() + '.' + dom; }));
+    addLog('SecurityTrails → ' + s.size + ' subdomains ✓', 'ok');
+    setSt('securitytrails', 'st-ok', '✓');
+    return Array.from(s).map(function(x){ return {sub:x, src:'securitytrails'}; });
+  } catch(e) { addLog('SecurityTrails ✗ ' + e.message, 'er'); setSt('securitytrails','st-er','✗'); return []; }
+}
+
+async function fShodan(dom, key) {
+  if (!key) { addLog('Shodan → skipped (no key)', 'wn'); setSt('shodan','st-sk','—'); return []; }
+  addLog('Shodan → DNS+ports (direct+key)...', 'in');
+  setSt('shodan', 'st-run', '...');
+  try {
+    var r = await fetchWithTimeout('https://api.shodan.io/dns/domain/' + dom + '?key=' + key, {}, 18000);
+    if (!r.ok) throw new Error('HTTP ' + r.status + ' — check key');
+    var d = await r.json();
+    var s = new Set((d.subdomains || []).map(function(x){ return x.trim().toLowerCase() + '.' + dom; }));
+    addLog('Shodan → ' + s.size + ' subdomains ✓', 'ok');
+    setSt('shodan', 'st-ok', '✓');
+    return Array.from(s).map(function(x){ return {sub:x, src:'shodan'}; });
+  } catch(e) { addLog('Shodan ✗ ' + e.message, 'er'); setSt('shodan','st-er','✗'); return []; }
+}
+
+// ─── MAIN SCAN ────────────────────────────────────────────────────────
 async function startScan() {
-  const domain = document.getElementById('domainInput').value.trim().toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');
-  if (!domain || !/^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain)) { alert('Enter a valid domain: example.com'); return; }
+  var raw = document.getElementById('domIn').value.trim();
+  var dom = raw.toLowerCase().replace(/^https?:\/\//,'').replace(/\/.*$/,'').replace(/^www\./,'').trim();
+  if (!dom || !/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(dom)) {
+    alert('Please enter a valid domain.\nExample: bytedance.com');
+    return;
+  }
 
-  const keyVT     = document.getElementById('keyVT').value.trim();
-  const keyST     = document.getElementById('keyST').value.trim();
-  const keyShodan = document.getElementById('keyShodan').value.trim();
+  var kVT = document.getElementById('kVT').value.trim();
+  var kST = document.getElementById('kST').value.trim();
+  var kSH = document.getElementById('kSH').value.trim();
 
-  allResults=[]; filtered=[]; scanning=true;
-  document.getElementById('logArea').innerHTML='';
-  document.getElementById('logArea').classList.add('visible');
-  document.getElementById('progressWrap').classList.add('visible');
-  document.getElementById('progressBar').style.width='0%';
-  document.getElementById('scanBtn').disabled=true;
-  document.getElementById('exportBtn').disabled=true;
-  document.getElementById('statTime').textContent='…';
-  document.getElementById('resultsBody').innerHTML='<tr><td colspan="4" style="text-align:center;padding:26px;color:var(--muted)"><span class="spinner"></span><span class="blink">SCANNING...</span></td></tr>';
-  updateStats(); updateSourceFilter();
+  results = []; filtered = []; running = true;
+  SRCS.forEach(function(s){ setSt(s.id, '', ''); });
+  document.getElementById('logEl').innerHTML = '';
+  document.getElementById('logEl').classList.add('on');
+  document.getElementById('pbw').classList.add('on');
+  document.getElementById('pb').style.width = '0%';
+  document.getElementById('btnGo').disabled = true;
+  document.getElementById('btnEx').disabled = true;
+  document.getElementById('sTime').textContent = '…';
+  document.getElementById('tbody').innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--mu)"><span class="spin"></span><span class="blink">SCANNING ' + dom + '...</span></td></tr>';
+  updateStats(null); updateSrcFilter();
 
-  const active = SOURCES.filter(s => s.active);
-  log(`Target: ${domain} | ${active.length} sources active`, 'info');
-  const t0 = Date.now();
+  var active = SRCS.filter(function(s){ return s.active; });
+  addLog('Target: ' + dom + ' | ' + active.length + ' sources active', 'in');
+  var t0 = Date.now();
 
-  const fetchers = {
-    crtsh:          () => fetchCrtSh(domain),
-    hackertarget:   () => fetchHackerTarget(domain),
-    otx:            () => fetchOTX(domain),
-    urlscan:        () => fetchUrlScan(domain),
-    wayback:        () => fetchWayback(domain),
-    rapiddns:       () => fetchRapidDNS(domain),
-    threatcrowd:    () => fetchThreatCrowd(domain),
-    virustotal:     () => fetchVirusTotal(domain, keyVT),
-    securitytrails: () => fetchSecurityTrails(domain, keyST),
-    shodan:         () => fetchShodan(domain, keyShodan),
+  var fetchers = {
+    crtsh:          function(){ return fCrtSh(dom); },
+    hackertarget:   function(){ return fHT(dom); },
+    otx:            function(){ return fOTX(dom); },
+    urlscan:        function(){ return fUrlScan(dom); },
+    wayback:        function(){ return fWayback(dom); },
+    rapiddns:       function(){ return fRapidDNS(dom); },
+    threatcrowd:    function(){ return fThreatCrowd(dom); },
+    virustotal:     function(){ return fVT(dom, kVT); },
+    securitytrails: function(){ return fST(dom, kST); },
+    shodan:         function(){ return fShodan(dom, kSH); }
   };
 
-  let done=0;
-  await Promise.allSettled(active.map(async s => {
-    const results = await fetchers[s.id]();
-    allResults.push(...results);
-    done++;
-    setProgress(Math.round(done/active.length*100));
-    updateStats(Date.now()-t0);
-    applyFilter(); updateSourceFilter();
-  }));
+  var done = 0;
+  var total = active.length;
 
+  var tasks = active.map(async function(s) {
+    try {
+      var r = await fetchers[s.id]();
+      results = results.concat(r);
+    } catch(e) {
+      addLog(s.name + ' unexpected: ' + e.message, 'er');
+      setSt(s.id, 'st-er', '✗');
+    }
+    done++;
+    setProgress(Math.round(done / total * 100));
+    updateStats(Date.now() - t0);
+    applyFilter();
+    updateSrcFilter();
+  });
+
+  await Promise.allSettled(tasks);
+
+  var elapsed = Date.now() - t0;
   setProgress(100);
-  const uniqueCount = new Set(allResults.map(r=>r.subdomain)).size;
-  const srcCount = new Set(allResults.map(r=>r.source)).size;
-  log(`Done in ${((Date.now()-t0)/1000).toFixed(1)}s — ${uniqueCount} unique subdomains from ${srcCount} sources.`, 'ok');
-  document.getElementById('scanBtn').disabled=false;
-  document.getElementById('exportBtn').disabled=false;
-  scanning=false;
-  updateStats(Date.now()-t0);
+  var uq = new Set(results.map(function(r){ return r.sub; })).size;
+  var sr = new Set(results.map(function(r){ return r.src; })).size;
+  addLog('Done in ' + (elapsed/1000).toFixed(1) + 's — ' + uq + ' unique subdomains from ' + sr + ' sources', 'ok');
+  document.getElementById('btnGo').disabled = false;
+  document.getElementById('btnEx').disabled = results.length === 0;
+  running = false;
+  updateStats(elapsed);
 }
 
-// ─── Table ─────────────────────────────────────────────────────────────
-
+// ─── TABLE ────────────────────────────────────────────────────────────
 function sortBy(col) {
-  if (sortCol===col) sortAsc=!sortAsc; else { sortCol=col; sortAsc=true; }
+  if (sortCol === col) sortAsc = !sortAsc; else { sortCol = col; sortAsc = true; }
   renderTable();
 }
 
 function applyFilter() {
-  const q = document.getElementById('filterInput').value.toLowerCase();
-  const sf = document.getElementById('sourceFilter').value;
-  const seen = new Set();
-  filtered = allResults.filter(r => {
-    const key = r.subdomain+'|'+r.source;
-    if (seen.has(key)) return false; seen.add(key);
-    return (!q||r.subdomain.includes(q)) && (!sf||r.source===sf);
+  var q = document.getElementById('fq').value.toLowerCase();
+  var sf = document.getElementById('fsrc').value;
+  var seen = new Set();
+  filtered = results.filter(function(r) {
+    var k = r.sub + '|' + r.src;
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return (!q || r.sub.includes(q)) && (!sf || r.src === sf);
   });
-  document.getElementById('filterCount').textContent = filtered.length + ' shown';
+  document.getElementById('fcnt').textContent = filtered.length + ' shown';
   renderTable();
 }
 
 function renderTable() {
-  const data = [...filtered].sort((a,b)=>sortAsc?a[sortCol].localeCompare(b[sortCol]):b[sortCol].localeCompare(a[sortCol]));
-  const tbody = document.getElementById('resultsBody');
-  if (!data.length && allResults.length===0) {
-    tbody.innerHTML='<tr><td colspan="4"><div class="empty-state"><div class="icon">🛰️</div><p>Enter a domain and hit Enumerate</p></div></td></tr>'; return;
+  var col = sortCol;
+  var data = filtered.slice().sort(function(a, b) {
+    return sortAsc ? a[col].localeCompare(b[col]) : b[col].localeCompare(a[col]);
+  });
+  var tb = document.getElementById('tbody');
+  if (!data.length && results.length === 0) {
+    tb.innerHTML = '<tr><td colspan="4"><div class="empty"><div class="ei">🛰️</div><p>Enter a domain and hit Enumerate</p></div></td></tr>';
+    return;
   }
-  if (!data.length) { tbody.innerHTML='<tr><td colspan="4" style="text-align:center;padding:26px;color:var(--muted)">No results match filter</td></tr>'; return; }
-  tbody.innerHTML = data.map((r,i)=>`
-    <tr>
-      <td style="color:var(--muted)">${i+1}</td>
-      <td class="sub-cell"><a href="https://${r.subdomain}" target="_blank" rel="noopener">${r.subdomain}</a></td>
-      <td><span class="sbadge sbadge-${r.source}">${r.source}</span></td>
-      <td style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-        <a href="https://${r.subdomain}" target="_blank" rel="noopener" style="color:var(--accent);font-size:10px;text-decoration:none">↗ HTTP</a>
-        <a href="https://www.shodan.io/search?query=${r.subdomain}" target="_blank" rel="noopener" style="color:var(--accent4);font-size:10px;text-decoration:none">⊕ SHODAN</a>
-        <a href="https://crt.sh/?q=${r.subdomain}" target="_blank" rel="noopener" style="color:#ce93d8;font-size:10px;text-decoration:none">✦ CERTS</a>
-        <a href="https://web.archive.org/web/*/${r.subdomain}" target="_blank" rel="noopener" style="color:#80cbc4;font-size:10px;text-decoration:none">◎ WAYBACK</a>
-      </td>
-    </tr>`).join('');
+  if (!data.length) {
+    tb.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--mu)">No results match filter</td></tr>';
+    return;
+  }
+  tb.innerHTML = data.map(function(r, i) {
+    return '<tr>'
+      + '<td style="color:var(--mu)">' + (i+1) + '</td>'
+      + '<td class="tc"><a href="https://' + r.sub + '" target="_blank" rel="noopener">' + r.sub + '</a></td>'
+      + '<td><span class="sbg sbg-' + r.src + '">' + r.src + '</span></td>'
+      + '<td style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
+      + '<a href="https://' + r.sub + '" target="_blank" rel="noopener" style="color:var(--c1);font-size:10px;text-decoration:none">↗ HTTP</a>'
+      + '<a href="https://www.shodan.io/search?query=' + r.sub + '" target="_blank" rel="noopener" style="color:var(--c4);font-size:10px;text-decoration:none">⊕ SHODAN</a>'
+      + '<a href="https://crt.sh/?q=' + r.sub + '" target="_blank" rel="noopener" style="color:var(--c5);font-size:10px;text-decoration:none">✦ CERTS</a>'
+      + '<a href="https://web.archive.org/web/*/' + r.sub + '" target="_blank" rel="noopener" style="color:#80cbc4;font-size:10px;text-decoration:none">◎ ARCHIVE</a>'
+      + '</td></tr>';
+  }).join('');
 }
 
-function updateSourceFilter() {
-  const sel = document.getElementById('sourceFilter');
-  const cur = sel.value;
-  const sources = [...new Set(allResults.map(r=>r.source))];
-  sel.innerHTML = '<option value="">All Sources</option>' + sources.map(s=>`<option value="${s}"${s===cur?' selected':''}>${s}</option>`).join('');
+function updateSrcFilter() {
+  var sel = document.getElementById('fsrc');
+  var cur = sel.value;
+  var srcs = Array.from(new Set(results.map(function(r){ return r.src; })));
+  sel.innerHTML = '<option value="">All Sources</option>' + srcs.map(function(s){ return '<option value="' + s + '"' + (s===cur?' selected':'') + '>' + s + '</option>'; }).join('');
 }
 
-function exportResults() {
-  const domain = document.getElementById('domainInput').value.trim();
-  const unique = [...new Set(allResults.map(r=>r.subdomain))].sort();
-  const blob = new Blob([unique.join('\n')], {type:'text/plain'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `subs_${domain}_${Date.now()}.txt`;
+function doExport() {
+  var dom = document.getElementById('domIn').value.trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+  var lines = Array.from(new Set(results.map(function(r){ return r.sub; }))).sort().join('\n');
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([lines], {type:'text/plain'}));
+  a.download = 'subs_' + dom + '_' + Date.now() + '.txt';
   a.click();
 }
 
-function clearAll() {
-  allResults=[]; filtered=[];
-  document.getElementById('domainInput').value='';
-  document.getElementById('filterInput').value='';
-  document.getElementById('logArea').innerHTML='';
-  document.getElementById('logArea').classList.remove('visible');
-  document.getElementById('progressWrap').classList.remove('visible');
-  document.getElementById('progressBar').style.width='0%';
-  document.getElementById('exportBtn').disabled=true;
-  document.getElementById('statTime').textContent='—';
-  updateStats(); applyFilter();
-  document.getElementById('sourceFilter').innerHTML='<option value="">All Sources</option>';
-  document.getElementById('filterCount').textContent='';
+function doClear() {
+  results = []; filtered = [];
+  ['domIn','fq','kVT','kST','kSH'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('logEl').innerHTML = '';
+  document.getElementById('logEl').classList.remove('on');
+  document.getElementById('pbw').classList.remove('on');
+  document.getElementById('pb').style.width = '0%';
+  document.getElementById('btnEx').disabled = true;
+  document.getElementById('sTime').textContent = '—';
+  document.getElementById('fsrc').innerHTML = '<option value="">All Sources</option>';
+  document.getElementById('fcnt').textContent = '';
+  SRCS.forEach(function(s){ setSt(s.id,'',''); });
+  updateStats(null); renderTable();
 }
 
-document.getElementById('domainInput').addEventListener('keydown', e=>{ if(e.key==='Enter'&&!scanning) startScan(); });
+document.getElementById('domIn').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !running) startScan();
+});
 </script>
 </body>
 </html>
