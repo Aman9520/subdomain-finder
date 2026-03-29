@@ -3,157 +3,150 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SubRecon v2 — 10-Source Subdomain Hunter</title>
+<title>Subdomain Hunter</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #080c10;
-    --surface: #0d1117;
-    --surface2: #111820;
-    --border: #1e2a36;
-    --accent: #00e5ff;
-    --accent2: #ff4081;
-    --accent3: #69ff47;
-    --accent4: #ffeb3b;
-    --text: #c9d1d9;
-    --muted: #4a5568;
-    --font-mono: 'Share Tech Mono', monospace;
-    --font-ui: 'Rajdhani', sans-serif;
+    --bg:#080c10; --surface:#0d1117; --border:#1e2a36;
+    --accent:#00e5ff; --accent2:#ff4081; --accent3:#69ff47; --accent4:#ffeb3b;
+    --text:#c9d1d9; --muted:#4a5568;
+    --font-mono:'Share Tech Mono',monospace; --font-ui:'Rajdhani',sans-serif;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: var(--font-mono); min-height: 100vh; overflow-x: hidden; }
-  body::before { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,229,255,0.012) 2px, rgba(0,229,255,0.012) 4px); pointer-events: none; z-index: 9999; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,229,255,.012) 2px,rgba(0,229,255,.012) 4px);pointer-events:none;z-index:9999;}
 
-  header { border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; gap: 16px; background: linear-gradient(90deg, rgba(0,229,255,0.05) 0%, transparent 60%); }
-  .logo { font-family: var(--font-ui); font-size: 26px; font-weight: 700; color: var(--accent); letter-spacing: 3px; text-transform: uppercase; }
-  .logo span { color: var(--accent2); }
-  .logo-sub { font-size: 10px; color: var(--muted); letter-spacing: 2px; margin-top: 2px; }
-  .header-right { margin-left: auto; text-align: right; }
-  .version-badge { background: rgba(0,229,255,0.1); border: 1px solid rgba(0,229,255,0.3); color: var(--accent); padding: 3px 10px; font-size: 11px; letter-spacing: 2px; }
+  header{border-bottom:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;gap:14px;background:linear-gradient(90deg,rgba(0,229,255,.05) 0%,transparent 60%);}
+  .logo{font-family:var(--font-ui);font-size:24px;font-weight:700;color:var(--accent);letter-spacing:3px;text-transform:uppercase;}
+  .logo span{color:var(--accent2);}
+  .logo-sub{font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:2px;}
+  .version-badge{margin-left:auto;background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.3);color:var(--accent);padding:3px 10px;font-size:11px;letter-spacing:2px;}
 
-  main { padding: 28px 32px; max-width: 1500px; margin: 0 auto; }
+  main{padding:24px 28px;max-width:1500px;margin:0 auto;}
 
-  /* API Keys panel */
-  .keys-panel { background: var(--surface); border: 1px solid var(--border); margin-bottom: 24px; }
-  .keys-header { padding: 12px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
-  .keys-header-title { font-family: var(--font-ui); font-size: 13px; font-weight: 600; letter-spacing: 2px; color: var(--accent4); text-transform: uppercase; }
-  .keys-header-sub { font-size: 11px; color: var(--muted); margin-left: auto; }
-  .keys-body { display: none; padding: 16px 18px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; }
-  .keys-body.open { display: grid; }
-  .key-row { display: flex; flex-direction: column; gap: 5px; }
-  .key-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; display: flex; align-items: center; gap: 6px; }
-  .key-badge-free { color: var(--accent3); font-size: 9px; border: 1px solid rgba(105,255,71,0.4); padding: 1px 5px; }
-  .key-badge-paid { color: var(--accent4); font-size: 9px; border: 1px solid rgba(255,235,59,0.4); padding: 1px 5px; }
-  .key-input { background: var(--bg); border: 1px solid var(--border); color: var(--accent3); font-family: var(--font-mono); font-size: 12px; padding: 8px 12px; outline: none; width: 100%; }
-  .key-input:focus { border-color: var(--accent); }
-  .key-input::placeholder { color: var(--muted); }
+  /* CORS notice */
+  .notice{background:rgba(255,235,59,.05);border:1px solid rgba(255,235,59,.25);padding:10px 16px;margin-bottom:20px;font-size:11px;color:var(--accent4);line-height:1.7;display:flex;gap:10px;align-items:flex-start;}
+  .notice-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
 
-  /* Main input */
-  .input-row { display: flex; gap: 12px; margin-bottom: 20px; align-items: stretch; }
-  .input-wrap { flex: 1; position: relative; }
-  .input-wrap::before { content: '> TARGET:'; position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--accent); font-size: 12px; letter-spacing: 1px; pointer-events: none; }
-  input.domain-input { width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--accent3); font-family: var(--font-mono); font-size: 16px; padding: 14px 16px 14px 110px; outline: none; transition: border-color 0.2s; }
-  input.domain-input:focus { border-color: var(--accent); box-shadow: 0 0 16px rgba(0,229,255,0.12); }
-  input.domain-input::placeholder { color: var(--muted); }
+  /* Keys panel */
+  .keys-panel{background:var(--surface);border:1px solid var(--border);margin-bottom:20px;}
+  .keys-header{padding:11px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;}
+  .keys-title{font-family:var(--font-ui);font-size:13px;font-weight:600;letter-spacing:2px;color:var(--accent4);text-transform:uppercase;}
+  .keys-sub{font-size:10px;color:var(--muted);margin-left:auto;}
+  .keys-body{display:none;padding:14px 16px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;}
+  .keys-body.open{display:grid;}
+  .key-row{display:flex;flex-direction:column;gap:5px;}
+  .key-label{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;display:flex;align-items:center;gap:6px;}
+  .badge-free{color:var(--accent3);font-size:9px;border:1px solid rgba(105,255,71,.4);padding:1px 5px;}
+  .badge-paid{color:var(--accent4);font-size:9px;border:1px solid rgba(255,235,59,.4);padding:1px 5px;}
+  .key-input{background:var(--bg);border:1px solid var(--border);color:var(--accent3);font-family:var(--font-mono);font-size:12px;padding:7px 11px;outline:none;width:100%;}
+  .key-input:focus{border-color:var(--accent);}
+  .key-input::placeholder{color:var(--muted);}
 
-  .btn { font-family: var(--font-ui); font-size: 14px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 0 24px; border: none; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-  .btn-scan { background: var(--accent); color: #000; }
-  .btn-scan:hover { box-shadow: 0 0 24px rgba(0,229,255,0.45); }
-  .btn-scan:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
-  .btn-export { background: transparent; color: var(--accent3); border: 1px solid var(--accent3); }
-  .btn-export:hover { background: rgba(105,255,71,0.08); }
-  .btn-export:disabled { opacity: 0.3; cursor: not-allowed; }
-  .btn-clear { background: transparent; color: var(--muted); border: 1px solid var(--border); }
-  .btn-clear:hover { color: var(--accent2); border-color: var(--accent2); }
+  /* Input */
+  .input-row{display:flex;gap:10px;margin-bottom:18px;align-items:stretch;}
+  .input-wrap{flex:1;position:relative;}
+  .input-wrap::before{content:'> TARGET:';position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--accent);font-size:11px;letter-spacing:1px;pointer-events:none;}
+  input.domain-input{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--accent3);font-family:var(--font-mono);font-size:15px;padding:13px 14px 13px 100px;outline:none;transition:border-color .2s;}
+  input.domain-input:focus{border-color:var(--accent);box-shadow:0 0 14px rgba(0,229,255,.1);}
+  input.domain-input::placeholder{color:var(--muted);}
+  .btn{font-family:var(--font-ui);font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:0 22px;border:none;cursor:pointer;transition:all .2s;white-space:nowrap;}
+  .btn-scan{background:var(--accent);color:#000;}
+  .btn-scan:hover{box-shadow:0 0 22px rgba(0,229,255,.4);}
+  .btn-scan:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;}
+  .btn-export{background:transparent;color:var(--accent3);border:1px solid var(--accent3);}
+  .btn-export:hover{background:rgba(105,255,71,.07);}
+  .btn-export:disabled{opacity:.3;cursor:not-allowed;}
+  .btn-clear{background:transparent;color:var(--muted);border:1px solid var(--border);}
+  .btn-clear:hover{color:var(--accent2);border-color:var(--accent2);}
 
-  /* Source grid */
-  .sources-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; margin-bottom: 24px; }
-  .src-card { background: var(--surface); border: 1px solid var(--border); padding: 10px 14px; cursor: pointer; user-select: none; transition: all 0.15s; display: flex; flex-direction: column; gap: 4px; }
-  .src-card.active { border-color: var(--accent); background: rgba(0,229,255,0.04); }
-  .src-card-top { display: flex; align-items: center; gap: 8px; }
-  .src-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
-  .src-card.active .src-dot { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
-  .src-name { font-family: var(--font-ui); font-size: 13px; font-weight: 600; letter-spacing: 1px; color: var(--text); }
-  .src-card.active .src-name { color: var(--accent); }
-  .src-type { font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
-  .src-needs-key { font-size: 9px; color: var(--accent4); letter-spacing: 1px; }
+  /* Sources */
+  .sources-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:7px;margin-bottom:20px;}
+  .src-card{background:var(--surface);border:1px solid var(--border);padding:9px 12px;cursor:pointer;user-select:none;transition:all .15s;}
+  .src-card.active{border-color:var(--accent);background:rgba(0,229,255,.04);}
+  .src-card-top{display:flex;align-items:center;gap:7px;margin-bottom:3px;}
+  .src-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0;}
+  .src-card.active .src-dot{background:var(--accent);box-shadow:0 0 5px var(--accent);}
+  .src-name{font-family:var(--font-ui);font-size:12px;font-weight:600;letter-spacing:1px;color:var(--text);}
+  .src-card.active .src-name{color:var(--accent);}
+  .src-meta{display:flex;gap:5px;align-items:center;}
+  .src-type{font-size:9px;color:var(--muted);letter-spacing:1px;}
+  .src-status{font-size:9px;letter-spacing:1px;}
+  .cors-ok{color:var(--accent3);}
+  .cors-proxy{color:var(--accent4);}
+  .cors-key{color:#ce93d8;}
 
   /* Stats */
-  .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 22px; }
-  @media(max-width:900px){ .stats-row { grid-template-columns: repeat(3,1fr); } }
-  .stat-card { background: var(--surface); border: 1px solid var(--border); padding: 14px 16px; position: relative; overflow: hidden; }
-  .stat-card::after { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; }
-  .stat-card:nth-child(1)::after { background: var(--accent); }
-  .stat-card:nth-child(2)::after { background: var(--accent2); }
-  .stat-card:nth-child(3)::after { background: var(--accent3); }
-  .stat-card:nth-child(4)::after { background: var(--accent4); }
-  .stat-card:nth-child(5)::after { background: #ce93d8; }
-  .stat-label { font-size: 9px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
-  .stat-value { font-family: var(--font-ui); font-size: 28px; font-weight: 700; }
-  .stat-card:nth-child(1) .stat-value { color: var(--accent); }
-  .stat-card:nth-child(2) .stat-value { color: var(--accent2); }
-  .stat-card:nth-child(3) .stat-value { color: var(--accent3); }
-  .stat-card:nth-child(4) .stat-value { color: var(--accent4); }
-  .stat-card:nth-child(5) .stat-value { color: #ce93d8; }
+  .stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-bottom:18px;}
+  @media(max-width:800px){.stats-row{grid-template-columns:repeat(3,1fr);}}
+  .stat-card{background:var(--surface);border:1px solid var(--border);padding:13px 15px;position:relative;overflow:hidden;}
+  .stat-card::after{content:'';position:absolute;top:0;left:0;width:3px;height:100%;}
+  .stat-card:nth-child(1)::after{background:var(--accent);}
+  .stat-card:nth-child(2)::after{background:var(--accent2);}
+  .stat-card:nth-child(3)::after{background:var(--accent3);}
+  .stat-card:nth-child(4)::after{background:var(--accent4);}
+  .stat-card:nth-child(5)::after{background:#ce93d8;}
+  .stat-label{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px;}
+  .stat-value{font-family:var(--font-ui);font-size:26px;font-weight:700;}
+  .stat-card:nth-child(1) .stat-value{color:var(--accent);}
+  .stat-card:nth-child(2) .stat-value{color:var(--accent2);}
+  .stat-card:nth-child(3) .stat-value{color:var(--accent3);}
+  .stat-card:nth-child(4) .stat-value{color:var(--accent4);}
+  .stat-card:nth-child(5) .stat-value{color:#ce93d8;}
 
-  /* Progress */
-  .progress-wrap { height: 2px; background: var(--border); margin-bottom: 18px; display: none; }
-  .progress-wrap.visible { display: block; }
-  .progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent3)); width: 0%; transition: width 0.3s ease; }
+  .progress-wrap{height:2px;background:var(--border);margin-bottom:16px;display:none;}
+  .progress-wrap.visible{display:block;}
+  .progress-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent3));width:0%;transition:width .3s ease;}
 
-  /* Log */
-  .log-area { background: var(--surface); border: 1px solid var(--border); padding: 12px 16px; height: 120px; overflow-y: auto; margin-bottom: 18px; font-size: 11px; line-height: 1.9; display: none; }
-  .log-area.visible { display: block; }
-  .log-line.ok { color: var(--accent3); }
-  .log-line.err { color: var(--accent2); }
-  .log-line.info { color: var(--accent); }
-  .log-line.warn { color: var(--accent4); }
-  .log-line { color: var(--muted); }
+  .log-area{background:var(--surface);border:1px solid var(--border);padding:11px 14px;height:115px;overflow-y:auto;margin-bottom:16px;font-size:11px;line-height:1.9;display:none;}
+  .log-area.visible{display:block;}
+  .log-line.ok{color:var(--accent3);}
+  .log-line.err{color:var(--accent2);}
+  .log-line.info{color:var(--accent);}
+  .log-line.warn{color:var(--accent4);}
+  .log-line{color:var(--muted);}
 
-  /* Filter */
-  .filter-bar { display: flex; gap: 10px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
-  .filter-input { background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: var(--font-mono); font-size: 12px; padding: 8px 14px; outline: none; width: 260px; }
-  .filter-input:focus { border-color: var(--accent); }
-  .filter-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
-  select { background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: var(--font-mono); font-size: 12px; padding: 8px 12px; outline: none; cursor: pointer; }
+  .filter-bar{display:flex;gap:9px;margin-bottom:12px;align-items:center;flex-wrap:wrap;}
+  .filter-input{background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:12px;padding:7px 12px;outline:none;width:240px;}
+  .filter-input:focus{border-color:var(--accent);}
+  .filter-label{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+  select{background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:12px;padding:7px 11px;outline:none;cursor:pointer;}
 
-  /* Table */
-  .table-wrap { background: var(--surface); border: 1px solid var(--border); overflow: auto; max-height: 500px; }
-  table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  thead { position: sticky; top: 0; background: #0e1520; z-index: 10; }
-  th { text-align: left; padding: 11px 14px; color: var(--accent); font-family: var(--font-ui); font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; border-bottom: 1px solid var(--border); white-space: nowrap; cursor: pointer; }
-  th:hover { color: #fff; }
-  td { padding: 9px 14px; border-bottom: 1px solid rgba(30,42,54,0.5); vertical-align: middle; }
-  tr:hover td { background: rgba(0,229,255,0.025); }
-  .sub-cell { color: var(--accent3); }
-  .sub-cell a { color: inherit; text-decoration: none; }
-  .sub-cell a:hover { text-decoration: underline; }
+  .table-wrap{background:var(--surface);border:1px solid var(--border);overflow:auto;max-height:490px;}
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  thead{position:sticky;top:0;background:#0e1520;z-index:10;}
+  th{text-align:left;padding:10px 13px;color:var(--accent);font-family:var(--font-ui);font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;}
+  th:hover{color:#fff;}
+  td{padding:8px 13px;border-bottom:1px solid rgba(30,42,54,.5);vertical-align:middle;}
+  tr:hover td{background:rgba(0,229,255,.025);}
+  .sub-cell{color:var(--accent3);}
+  .sub-cell a{color:inherit;text-decoration:none;}
+  .sub-cell a:hover{text-decoration:underline;}
 
-  /* Source badges */
-  .sbadge { display: inline-block; padding: 1px 7px; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; border: 1px solid; white-space: nowrap; }
-  .sbadge-crtsh       { color:#00e5ff; border-color:rgba(0,229,255,.35); background:rgba(0,229,255,.05); }
-  .sbadge-hackertarget{ color:#ff4081; border-color:rgba(255,64,129,.35); background:rgba(255,64,129,.05); }
-  .sbadge-otx         { color:#ffeb3b; border-color:rgba(255,235,59,.35); background:rgba(255,235,59,.05); }
-  .sbadge-urlscan     { color:#ce93d8; border-color:rgba(206,147,216,.35); background:rgba(206,147,216,.05); }
-  .sbadge-wayback     { color:#80cbc4; border-color:rgba(128,203,196,.35); background:rgba(128,203,196,.05); }
-  .sbadge-rapiddns    { color:#ff9800; border-color:rgba(255,152,0,.35); background:rgba(255,152,0,.05); }
-  .sbadge-threatcrowd { color:#ef5350; border-color:rgba(239,83,80,.35); background:rgba(239,83,80,.05); }
-  .sbadge-virustotal  { color:#42a5f5; border-color:rgba(66,165,245,.35); background:rgba(66,165,245,.05); }
-  .sbadge-securitytrails{ color:#ab47bc; border-color:rgba(171,71,188,.35); background:rgba(171,71,188,.05); }
-  .sbadge-shodan      { color:#ff7043; border-color:rgba(255,112,67,.35); background:rgba(255,112,67,.05); }
+  .sbadge{display:inline-block;padding:1px 7px;font-size:9px;letter-spacing:1px;text-transform:uppercase;border:1px solid;white-space:nowrap;}
+  .sbadge-crtsh{color:#00e5ff;border-color:rgba(0,229,255,.35);background:rgba(0,229,255,.05);}
+  .sbadge-hackertarget{color:#ff4081;border-color:rgba(255,64,129,.35);background:rgba(255,64,129,.05);}
+  .sbadge-otx{color:#ffeb3b;border-color:rgba(255,235,59,.35);background:rgba(255,235,59,.05);}
+  .sbadge-urlscan{color:#ce93d8;border-color:rgba(206,147,216,.35);background:rgba(206,147,216,.05);}
+  .sbadge-wayback{color:#80cbc4;border-color:rgba(128,203,196,.35);background:rgba(128,203,196,.05);}
+  .sbadge-rapiddns{color:#ff9800;border-color:rgba(255,152,0,.35);background:rgba(255,152,0,.05);}
+  .sbadge-threatcrowd{color:#ef5350;border-color:rgba(239,83,80,.35);background:rgba(239,83,80,.05);}
+  .sbadge-virustotal{color:#42a5f5;border-color:rgba(66,165,245,.35);background:rgba(66,165,245,.05);}
+  .sbadge-securitytrails{color:#ab47bc;border-color:rgba(171,71,188,.35);background:rgba(171,71,188,.05);}
+  .sbadge-shodan{color:#ff7043;border-color:rgba(255,112,67,.35);background:rgba(255,112,67,.05);}
 
-  .empty-state { text-align: center; padding: 50px 20px; color: var(--muted); }
-  .empty-state .icon { font-size: 36px; margin-bottom: 10px; }
-  .empty-state p { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; }
+  .empty-state{text-align:center;padding:50px 20px;color:var(--muted);}
+  .empty-state .icon{font-size:34px;margin-bottom:10px;}
+  .empty-state p{font-size:11px;letter-spacing:2px;text-transform:uppercase;}
 
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes blink { 0%,100%{opacity:1}50%{opacity:.2} }
-  .spinner { display:inline-block; width:11px; height:11px; border:2px solid var(--accent); border-top-color:transparent; border-radius:50%; animation:spin .8s linear infinite; vertical-align:middle; margin-right:6px; }
-  .blink { animation:blink 1s infinite; }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+  .spinner{display:inline-block;width:10px;height:10px;border:2px solid var(--accent);border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:5px;}
+  .blink{animation:blink 1s infinite;}
 
-  ::-webkit-scrollbar { width:5px; height:5px; }
-  ::-webkit-scrollbar-track { background:var(--bg); }
-  ::-webkit-scrollbar-thumb { background:var(--border); }
+  ::-webkit-scrollbar{width:5px;height:5px;}
+  ::-webkit-scrollbar-track{background:var(--bg);}
+  ::-webkit-scrollbar-thumb{background:var(--border);}
 </style>
 </head>
 <body>
@@ -163,76 +156,71 @@
     <div class="logo">Sub<span>Recon</span></div>
     <div class="logo-sub">PASSIVE SUBDOMAIN ENUMERATION ENGINE</div>
   </div>
-  <div class="header-right">
-    <div class="version-badge">V2.0 — 10 SOURCES</div>
-  </div>
+  <div class="version-badge">V3.0 — CORS FIXED</div>
 </header>
 
 <main>
 
-  <!-- API Keys Panel -->
+  <div class="notice">
+    <span class="notice-icon">⚡</span>
+    <div>
+      <strong>CORS Fix Applied:</strong> Sources marked <span style="color:var(--accent4)">PROXY</span> route through <code>api.allorigins.win</code> to bypass browser CORS restrictions.
+      Sources marked <span style="color:var(--accent3)">DIRECT</span> connect natively. Sources marked <span style="color:#ce93d8">KEY</span> require your API key.
+      If a proxy source fails, it auto-retries through a backup proxy.
+    </div>
+  </div>
+
+  <!-- API Keys -->
   <div class="keys-panel">
     <div class="keys-header" onclick="toggleKeys()">
-      <span style="color:var(--accent4);font-size:13px">⚙</span>
-      <span class="keys-header-title">API Keys Configuration</span>
-      <span class="keys-header-sub">3 optional keys · click to expand</span>
-      <span id="keysChevron" style="color:var(--muted);margin-left:8px;font-size:12px">▼</span>
+      <span style="color:var(--accent4)">⚙</span>
+      <span class="keys-title">API Keys (Optional)</span>
+      <span class="keys-sub">VirusTotal · SecurityTrails · Shodan &nbsp;▼</span>
     </div>
     <div class="keys-body" id="keysBody">
       <div class="key-row">
-        <div class="key-label">
-          VirusTotal API Key
-          <span class="key-badge-paid">PAID/FREE</span>
-        </div>
-        <input class="key-input" id="keyVT" type="password" placeholder="Enter VirusTotal API key (free tier available)">
+        <div class="key-label">VirusTotal API Key <span class="badge-free">FREE TIER</span></div>
+        <input class="key-input" id="keyVT" type="password" placeholder="vt api key — virustotal.com → My API key">
       </div>
       <div class="key-row">
-        <div class="key-label">
-          SecurityTrails API Key
-          <span class="key-badge-paid">PAID</span>
-        </div>
-        <input class="key-input" id="keyST" type="password" placeholder="Enter SecurityTrails API key">
+        <div class="key-label">SecurityTrails API Key <span class="badge-paid">PAID</span></div>
+        <input class="key-input" id="keyST" type="password" placeholder="securitytrails.com → Dashboard → API Key">
       </div>
       <div class="key-row">
-        <div class="key-label">
-          Shodan API Key
-          <span class="key-badge-paid">PAID</span>
-        </div>
-        <input class="key-input" id="keyShodan" type="password" placeholder="Enter Shodan API key">
+        <div class="key-label">Shodan API Key <span class="badge-paid">PAID</span></div>
+        <input class="key-input" id="keyShodan" type="password" placeholder="account.shodan.io → My Account → API Key">
       </div>
-      <div style="grid-column:1/-1;font-size:10px;color:var(--muted);padding-top:4px">
-        ⓘ Keys are stored only in memory — never sent anywhere except the respective APIs. Free sources work without any keys.
+      <div style="grid-column:1/-1;font-size:10px;color:var(--muted)">
+        ⓘ Keys stored in memory only — sent directly to each API, never to any proxy.
       </div>
     </div>
   </div>
 
-  <!-- Domain input -->
+  <!-- Input -->
   <div class="input-row">
     <div class="input-wrap">
       <input type="text" class="domain-input" id="domainInput" placeholder="example.com" autocomplete="off" spellcheck="false">
     </div>
     <button class="btn btn-scan" id="scanBtn" onclick="startScan()">Enumerate</button>
-    <button class="btn btn-export" id="exportBtn" onclick="exportResults()" disabled>Export TXT</button>
+    <button class="btn btn-export" id="exportBtn" onclick="exportResults()" disabled>Export</button>
     <button class="btn btn-clear" onclick="clearAll()">Clear</button>
   </div>
 
-  <!-- Source grid -->
+  <!-- Sources -->
   <div class="sources-grid" id="sourcesGrid"></div>
 
   <!-- Stats -->
   <div class="stats-row">
-    <div class="stat-card"><div class="stat-label">Total Found</div><div class="stat-value" id="statTotal">0</div></div>
+    <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value" id="statTotal">0</div></div>
     <div class="stat-card"><div class="stat-label">Unique</div><div class="stat-value" id="statUnique">0</div></div>
-    <div class="stat-card"><div class="stat-label">Sources Hit</div><div class="stat-value" id="statSources">0</div></div>
+    <div class="stat-card"><div class="stat-label">Sources</div><div class="stat-value" id="statSources">0</div></div>
     <div class="stat-card"><div class="stat-label">Wildcards</div><div class="stat-value" id="statWildcards">0</div></div>
-    <div class="stat-card"><div class="stat-label">Scan Time</div><div class="stat-value" id="statTime">—</div></div>
+    <div class="stat-card"><div class="stat-label">Time</div><div class="stat-value" id="statTime">—</div></div>
   </div>
 
-  <!-- Progress -->
   <div class="progress-wrap" id="progressWrap"><div class="progress-bar" id="progressBar"></div></div>
   <div class="log-area" id="logArea"></div>
 
-  <!-- Filter -->
   <div class="filter-bar">
     <span class="filter-label">Filter:</span>
     <input type="text" class="filter-input" id="filterInput" placeholder="grep subdomains..." oninput="applyFilter()">
@@ -240,15 +228,14 @@
     <span class="filter-label" id="filterCount" style="color:var(--accent)"></span>
   </div>
 
-  <!-- Table -->
   <div class="table-wrap">
     <table>
       <thead>
         <tr>
-          <th style="width:45px">#</th>
+          <th style="width:42px">#</th>
           <th onclick="sortBy('subdomain')">Subdomain ↕</th>
           <th onclick="sortBy('source')">Source ↕</th>
-          <th>Actions</th>
+          <th>Quick Actions</th>
         </tr>
       </thead>
       <tbody id="resultsBody">
@@ -260,20 +247,49 @@
 </main>
 
 <script>
-const SOURCES = [
-  { id: 'crtsh',         name: 'crt.sh',          type: 'Cert Transparency', needsKey: false },
-  { id: 'hackertarget',  name: 'HackerTarget',     type: 'DNS Search',        needsKey: false },
-  { id: 'otx',           name: 'AlienVault OTX',   type: 'Threat Intel',      needsKey: false },
-  { id: 'urlscan',       name: 'urlscan.io',       type: 'URL Scanner',       needsKey: false },
-  { id: 'wayback',       name: 'Wayback CDX',      type: 'Archive',           needsKey: false },
-  { id: 'rapiddns',      name: 'RapidDNS',         type: 'Passive DNS',       needsKey: false },
-  { id: 'threatcrowd',   name: 'ThreatCrowd',      type: 'Threat Intel',      needsKey: false },
-  { id: 'virustotal',    name: 'VirusTotal',        type: 'Passive DNS',       needsKey: true,  keyId: 'keyVT'     },
-  { id: 'securitytrails',name: 'SecurityTrails',   type: 'Passive DNS',       needsKey: true,  keyId: 'keyST'     },
-  { id: 'shodan',        name: 'Shodan',           type: 'Port Scanner',      needsKey: true,  keyId: 'keyShodan' },
+// ─── CORS Proxies (tried in order on failure) ──────────────────────────
+const PROXIES = [
+  url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
 ];
 
-let allResults = [], filtered = [], scanning = false, sortCol = 'subdomain', sortAsc = true;
+async function proxyFetch(url, parseJSON = true) {
+  let lastErr;
+  for (const proxyFn of PROXIES) {
+    try {
+      const res = await fetch(proxyFn(url), { signal: AbortSignal.timeout(15000) });
+      if (!res.ok) throw new Error('Proxy HTTP ' + res.status);
+      const wrapper = await res.json();
+      // allorigins wraps in {contents:...}, corsproxy returns raw
+      const raw = wrapper.contents !== undefined ? wrapper.contents : JSON.stringify(wrapper);
+      if (!raw) throw new Error('Empty response');
+      return parseJSON ? JSON.parse(raw) : raw;
+    } catch(e) { lastErr = e; }
+  }
+  throw lastErr;
+}
+
+async function directFetch(url, opts={}) {
+  const res = await fetch(url, { ...opts, signal: AbortSignal.timeout(15000) });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res;
+}
+
+// ─── Sources config ────────────────────────────────────────────────────
+const SOURCES = [
+  { id:'crtsh',          name:'crt.sh',          type:'Cert Log',    method:'proxy',  needsKey:false },
+  { id:'hackertarget',   name:'HackerTarget',     type:'DNS Search',  method:'direct', needsKey:false },
+  { id:'otx',            name:'AlienVault OTX',   type:'Threat Intel',method:'direct', needsKey:false },
+  { id:'urlscan',        name:'urlscan.io',       type:'URL Scanner', method:'proxy',  needsKey:false },
+  { id:'wayback',        name:'Wayback CDX',      type:'Archive',     method:'proxy',  needsKey:false },
+  { id:'rapiddns',       name:'RapidDNS',         type:'Passive DNS', method:'proxy',  needsKey:false },
+  { id:'threatcrowd',    name:'ThreatCrowd',      type:'Threat Intel',method:'proxy',  needsKey:false },
+  { id:'virustotal',     name:'VirusTotal',       type:'Passive DNS', method:'direct', needsKey:true, keyId:'keyVT'     },
+  { id:'securitytrails', name:'SecurityTrails',   type:'Passive DNS', method:'direct', needsKey:true, keyId:'keyST'     },
+  { id:'shodan',         name:'Shodan',           type:'Port+DNS',    method:'direct', needsKey:true, keyId:'keyShodan' },
+];
+
+let allResults=[], filtered=[], scanning=false, sortCol='subdomain', sortAsc=true;
 SOURCES.forEach(s => s.active = true);
 
 // Build source cards
@@ -282,24 +298,17 @@ SOURCES.forEach(s => {
   const el = document.createElement('div');
   el.className = 'src-card active';
   el.id = 'src_' + s.id;
+  const statusClass = s.needsKey ? 'cors-key' : (s.method === 'direct' ? 'cors-ok' : 'cors-proxy');
+  const statusLabel = s.needsKey ? 'KEY' : (s.method === 'direct' ? 'DIRECT' : 'PROXY');
   el.innerHTML = `
-    <div class="src-card-top">
-      <span class="src-dot"></span>
-      <span class="src-name">${s.name}</span>
-    </div>
-    <div style="display:flex;gap:6px;align-items:center">
-      <span class="src-type">${s.type}</span>
-      ${s.needsKey ? '<span class="src-needs-key">KEY REQ.</span>' : '<span style="font-size:9px;color:var(--accent3)">FREE</span>'}
-    </div>`;
-  el.onclick = () => { s.active = !s.active; el.classList.toggle('active', s.active); };
+    <div class="src-card-top"><span class="src-dot"></span><span class="src-name">${s.name}</span></div>
+    <div class="src-meta"><span class="src-type">${s.type}</span><span class="src-status ${statusClass}">${statusLabel}</span></div>`;
+  el.onclick = () => { s.active=!s.active; el.classList.toggle('active',s.active); };
   grid.appendChild(el);
 });
 
 function toggleKeys() {
-  const body = document.getElementById('keysBody');
-  const chev = document.getElementById('keysChevron');
-  body.classList.toggle('open');
-  chev.textContent = body.classList.contains('open') ? '▲' : '▼';
+  document.getElementById('keysBody').classList.toggle('open');
 }
 
 function log(msg, type='') {
@@ -318,153 +327,150 @@ function setProgress(pct) {
 }
 
 function updateStats(elapsed) {
-  const unique = [...new Set(allResults.map(r => r.subdomain))];
-  const sources = [...new Set(allResults.map(r => r.source))];
-  const wildcards = unique.filter(s => s.startsWith('*')).length;
+  const unique = [...new Set(allResults.map(r=>r.subdomain))];
+  const sources = [...new Set(allResults.map(r=>r.source))];
   document.getElementById('statTotal').textContent = allResults.length;
   document.getElementById('statUnique').textContent = unique.length;
   document.getElementById('statSources').textContent = sources.length;
-  document.getElementById('statWildcards').textContent = wildcards;
+  document.getElementById('statWildcards').textContent = unique.filter(s=>s.startsWith('*')).length;
   if (elapsed !== undefined) document.getElementById('statTime').textContent = (elapsed/1000).toFixed(1)+'s';
 }
 
 // ─── Fetchers ──────────────────────────────────────────────────────────
 
 async function fetchCrtSh(domain) {
-  log('crt.sh → querying certificate transparency logs...', 'info');
+  log('crt.sh → certificate transparency (via proxy)...', 'info');
   try {
-    const res = await fetch(`https://crt.sh/?q=%.${domain}&output=json`);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
+    const data = await proxyFetch(`https://crt.sh/?q=%.${domain}&output=json`);
     const subs = new Set();
-    data.forEach(e => e.name_value.split('\n').forEach(n => { n=n.trim().toLowerCase(); if(n.endsWith('.'+domain)||n===domain) subs.add(n); }));
-    log(`crt.sh → ${subs.size} subdomains`, 'ok');
+    data.forEach(e => e.name_value.split('\n').forEach(n => {
+      n = n.trim().toLowerCase();
+      if (n && (n.endsWith('.'+domain) || n===domain)) subs.add(n);
+    }));
+    log(`crt.sh → ${subs.size} subdomains ✓`, 'ok');
     return [...subs].map(s=>({subdomain:s,source:'crtsh'}));
-  } catch(e) { log(`crt.sh error: ${e.message}`, 'err'); return []; }
+  } catch(e) { log(`crt.sh failed: ${e.message}`, 'err'); return []; }
 }
 
 async function fetchHackerTarget(domain) {
-  log('HackerTarget → querying DNS host search...', 'info');
+  log('HackerTarget → DNS search (direct)...', 'info');
   try {
-    const res = await fetch(`https://api.hackertarget.com/hostsearch/?q=${domain}`);
+    const res = await directFetch(`https://api.hackertarget.com/hostsearch/?q=${domain}`);
     const text = await res.text();
     if (text.includes('error')||text.includes('API count')) throw new Error(text.trim().slice(0,60));
     const subs = new Set(text.trim().split('\n').map(l=>l.split(',')[0].trim().toLowerCase()).filter(s=>s&&s.endsWith('.'+domain)));
-    log(`HackerTarget → ${subs.size} subdomains`, 'ok');
+    log(`HackerTarget → ${subs.size} subdomains ✓`, 'ok');
     return [...subs].map(s=>({subdomain:s,source:'hackertarget'}));
-  } catch(e) { log(`HackerTarget error: ${e.message}`, 'err'); return []; }
+  } catch(e) { log(`HackerTarget failed: ${e.message}`, 'err'); return []; }
 }
 
 async function fetchOTX(domain) {
-  log('AlienVault OTX → querying passive DNS...', 'info');
+  log('AlienVault OTX → threat intel passive DNS (direct)...', 'info');
   try {
-    const res = await fetch(`https://otx.alienvault.com/api/v1/indicators/domain/${domain}/passive_dns`);
-    if (!res.ok) throw new Error('HTTP '+res.status);
+    const res = await directFetch(`https://otx.alienvault.com/api/v1/indicators/domain/${domain}/passive_dns`);
     const data = await res.json();
     const subs = new Set((data.passive_dns||[]).map(e=>e.hostname.trim().toLowerCase()).filter(s=>s&&(s.endsWith('.'+domain)||s===domain)));
-    log(`AlienVault OTX → ${subs.size} subdomains`, 'ok');
+    log(`AlienVault OTX → ${subs.size} subdomains ✓`, 'ok');
     return [...subs].map(s=>({subdomain:s,source:'otx'}));
-  } catch(e) { log(`OTX error: ${e.message}`, 'err'); return []; }
+  } catch(e) { log(`OTX failed: ${e.message}`, 'err'); return []; }
 }
 
 async function fetchUrlScan(domain) {
-  log('urlscan.io → querying scan database...', 'info');
+  log('urlscan.io → scan database (via proxy)...', 'info');
   try {
-    const res = await fetch(`https://urlscan.io/api/v1/search/?q=domain:${domain}&size=200`);
-    if (!res.ok) throw new Error('HTTP '+res.status);
-    const data = await res.json();
+    const data = await proxyFetch(`https://urlscan.io/api/v1/search/?q=domain:${domain}&size=200`);
     const subs = new Set((data.results||[]).map(r=>{try{return new URL(r.page.url).hostname.toLowerCase();}catch{return '';}}).filter(s=>s&&(s.endsWith('.'+domain)||s===domain)));
-    log(`urlscan.io → ${subs.size} subdomains`, 'ok');
+    log(`urlscan.io → ${subs.size} subdomains ✓`, 'ok');
     return [...subs].map(s=>({subdomain:s,source:'urlscan'}));
-  } catch(e) { log(`urlscan.io error: ${e.message}`, 'err'); return []; }
+  } catch(e) { log(`urlscan.io failed: ${e.message}`, 'err'); return []; }
 }
 
 async function fetchWayback(domain) {
-  log('Wayback CDX → querying archive...', 'info');
+  log('Wayback CDX → archive (via proxy)...', 'info');
   try {
-    const res = await fetch(`https://web.archive.org/cdx/search/cdx?url=*.${domain}/*&output=json&fl=original&collapse=urlkey&limit=2000`);
-    if (!res.ok) throw new Error('HTTP '+res.status);
-    const data = await res.json();
+    const data = await proxyFetch(`https://web.archive.org/cdx/search/cdx?url=*.${domain}/*&output=json&fl=original&collapse=urlkey&limit=2000`);
     const subs = new Set();
-    data.slice(1).forEach(row=>{try{const h=new URL(row[0]).hostname.toLowerCase();if(h.endsWith('.'+domain)||h===domain)subs.add(h);}catch{}});
-    log(`Wayback CDX → ${subs.size} subdomains`, 'ok');
+    (Array.isArray(data) ? data : []).slice(1).forEach(row=>{
+      try { const h=new URL(row[0]).hostname.toLowerCase(); if(h.endsWith('.'+domain)||h===domain) subs.add(h); } catch{}
+    });
+    log(`Wayback CDX → ${subs.size} subdomains ✓`, 'ok');
     return [...subs].map(s=>({subdomain:s,source:'wayback'}));
-  } catch(e) { log(`Wayback error: ${e.message}`, 'err'); return []; }
+  } catch(e) { log(`Wayback failed: ${e.message}`, 'err'); return []; }
 }
 
 async function fetchRapidDNS(domain) {
-  log('RapidDNS → querying passive DNS records...', 'info');
+  log('RapidDNS → passive DNS (via proxy)...', 'info');
   try {
-    const res = await fetch(`https://rapiddns.io/subdomain/${domain}?full=1#result`);
-    if (!res.ok) throw new Error('HTTP '+res.status);
-    const text = await res.text();
-    const matches = text.match(/[a-z0-9._-]+\.[a-z0-9.-]*\b/gi) || [];
-    const subs = new Set(matches.map(m=>m.toLowerCase()).filter(s=>s.endsWith('.'+domain)&&s!==domain&&s.split('.').length>2));
-    log(`RapidDNS → ${subs.size} subdomains`, 'ok');
+    const text = await proxyFetch(`https://rapiddns.io/subdomain/${domain}?full=1`, false);
+    const matches = [...text.matchAll(/([a-z0-9_-]+(?:\.[a-z0-9_-]+)*\.' + domain.replace(/\./g,'\\.')+r')/gi)];
+    const subs = new Set(matches.map(m=>m[0].toLowerCase()).filter(s=>s.endsWith('.'+domain)));
+    // fallback: regex over raw HTML
+    const re = new RegExp(`([a-z0-9._-]+\\.${domain.replace(/\./g,'\\.')})`, 'gi');
+    const all = text.match(re) || [];
+    all.forEach(s=>{ s=s.toLowerCase(); if(s!==domain&&s.endsWith('.'+domain)) subs.add(s); });
+    log(`RapidDNS → ${subs.size} subdomains ✓`, 'ok');
     return [...subs].map(s=>({subdomain:s,source:'rapiddns'}));
-  } catch(e) { log(`RapidDNS error: ${e.message}`, 'err'); return []; }
+  } catch(e) { log(`RapidDNS failed: ${e.message}`, 'err'); return []; }
 }
 
 async function fetchThreatCrowd(domain) {
-  log('ThreatCrowd → querying threat intelligence...', 'info');
+  log('ThreatCrowd → threat intelligence (via proxy)...', 'info');
   try {
-    const res = await fetch(`https://www.threatcrowd.org/searchApi/v2/domain/report/?domain=${domain}`);
-    if (!res.ok) throw new Error('HTTP '+res.status);
-    const data = await res.json();
+    const data = await proxyFetch(`https://www.threatcrowd.org/searchApi/v2/domain/report/?domain=${domain}`);
     const subs = new Set((data.subdomains||[]).map(s=>s.trim().toLowerCase()).filter(s=>s&&(s.endsWith('.'+domain)||s===domain)));
-    log(`ThreatCrowd → ${subs.size} subdomains`, 'ok');
+    log(`ThreatCrowd → ${subs.size} subdomains ✓`, 'ok');
     return [...subs].map(s=>({subdomain:s,source:'threatcrowd'}));
-  } catch(e) { log(`ThreatCrowd error: ${e.message}`, 'err'); return []; }
+  } catch(e) { log(`ThreatCrowd failed: ${e.message}`, 'err'); return []; }
 }
 
 async function fetchVirusTotal(domain, key) {
-  if (!key) { log('VirusTotal → skipped (no API key)', 'warn'); return []; }
-  log('VirusTotal → querying passive DNS (authenticated)...', 'info');
+  if (!key) { log('VirusTotal → skipped (no API key set)', 'warn'); return []; }
+  log('VirusTotal → passive DNS (direct, authenticated)...', 'info');
   try {
     const res = await fetch(`https://www.virustotal.com/api/v3/domains/${domain}/subdomains?limit=40`, {
-      headers: { 'x-apikey': key }
+      headers: { 'x-apikey': key }, signal: AbortSignal.timeout(15000)
     });
-    if (!res.ok) throw new Error('HTTP '+res.status+' — check API key');
+    if (!res.ok) throw new Error('HTTP '+res.status+' — verify your API key');
     const data = await res.json();
     const subs = new Set((data.data||[]).map(e=>e.id.trim().toLowerCase()).filter(s=>s&&(s.endsWith('.'+domain)||s===domain)));
-    log(`VirusTotal → ${subs.size} subdomains`, 'ok');
+    log(`VirusTotal → ${subs.size} subdomains ✓`, 'ok');
     return [...subs].map(s=>({subdomain:s,source:'virustotal'}));
-  } catch(e) { log(`VirusTotal error: ${e.message}`, 'err'); return []; }
+  } catch(e) { log(`VirusTotal failed: ${e.message}`, 'err'); return []; }
 }
 
 async function fetchSecurityTrails(domain, key) {
-  if (!key) { log('SecurityTrails → skipped (no API key)', 'warn'); return []; }
-  log('SecurityTrails → querying passive DNS (authenticated)...', 'info');
+  if (!key) { log('SecurityTrails → skipped (no API key set)', 'warn'); return []; }
+  log('SecurityTrails → passive DNS (direct, authenticated)...', 'info');
   try {
     const res = await fetch(`https://api.securitytrails.com/v1/domain/${domain}/subdomains?children_only=false&include_inactive=true`, {
-      headers: { 'APIKEY': key }
+      headers: { 'APIKEY': key }, signal: AbortSignal.timeout(15000)
     });
-    if (!res.ok) throw new Error('HTTP '+res.status+' — check API key');
+    if (!res.ok) throw new Error('HTTP '+res.status+' — verify your API key');
     const data = await res.json();
-    const subs = new Set((data.subdomains||[]).map(s=>(s.trim().toLowerCase()+'.'+domain)).filter(s=>s.endsWith('.'+domain)));
-    log(`SecurityTrails → ${subs.size} subdomains`, 'ok');
+    const subs = new Set((data.subdomains||[]).map(s=>(s.trim().toLowerCase()+'.'+domain)));
+    log(`SecurityTrails → ${subs.size} subdomains ✓`, 'ok');
     return [...subs].map(s=>({subdomain:s,source:'securitytrails'}));
-  } catch(e) { log(`SecurityTrails error: ${e.message}`, 'err'); return []; }
+  } catch(e) { log(`SecurityTrails failed: ${e.message}`, 'err'); return []; }
 }
 
 async function fetchShodan(domain, key) {
-  if (!key) { log('Shodan → skipped (no API key)', 'warn'); return []; }
-  log('Shodan → querying host search (authenticated)...', 'info');
+  if (!key) { log('Shodan → skipped (no API key set)', 'warn'); return []; }
+  log('Shodan → DNS + port recon (direct, authenticated)...', 'info');
   try {
-    const res = await fetch(`https://api.shodan.io/dns/domain/${domain}?key=${key}`);
-    if (!res.ok) throw new Error('HTTP '+res.status+' — check API key');
+    const res = await fetch(`https://api.shodan.io/dns/domain/${domain}?key=${key}`, { signal: AbortSignal.timeout(15000) });
+    if (!res.ok) throw new Error('HTTP '+res.status+' — verify your API key');
     const data = await res.json();
     const subs = new Set((data.subdomains||[]).map(s=>(s.trim().toLowerCase()+'.'+domain)));
-    log(`Shodan → ${subs.size} subdomains`, 'ok');
+    log(`Shodan → ${subs.size} subdomains ✓`, 'ok');
     return [...subs].map(s=>({subdomain:s,source:'shodan'}));
-  } catch(e) { log(`Shodan error: ${e.message}`, 'err'); return []; }
+  } catch(e) { log(`Shodan failed: ${e.message}`, 'err'); return []; }
 }
 
 // ─── Orchestrator ──────────────────────────────────────────────────────
 
 async function startScan() {
   const domain = document.getElementById('domainInput').value.trim().toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');
-  if (!domain || !/^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain)) { alert('Enter a valid domain like: example.com'); return; }
+  if (!domain || !/^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain)) { alert('Enter a valid domain: example.com'); return; }
 
   const keyVT     = document.getElementById('keyVT').value.trim();
   const keyST     = document.getElementById('keyST').value.trim();
@@ -478,8 +484,8 @@ async function startScan() {
   document.getElementById('scanBtn').disabled=true;
   document.getElementById('exportBtn').disabled=true;
   document.getElementById('statTime').textContent='…';
-  document.getElementById('resultsBody').innerHTML='<tr><td colspan="4" style="text-align:center;padding:28px;color:var(--muted)"><span class="spinner"></span><span class="blink">SCANNING...</span></td></tr>';
-  updateStats();
+  document.getElementById('resultsBody').innerHTML='<tr><td colspan="4" style="text-align:center;padding:26px;color:var(--muted)"><span class="spinner"></span><span class="blink">SCANNING...</span></td></tr>';
+  updateStats(); updateSourceFilter();
 
   const active = SOURCES.filter(s => s.active);
   log(`Target: ${domain} | ${active.length} sources active`, 'info');
@@ -508,14 +514,14 @@ async function startScan() {
     applyFilter(); updateSourceFilter();
   }));
 
-  const elapsed = Date.now()-t0;
   setProgress(100);
   const uniqueCount = new Set(allResults.map(r=>r.subdomain)).size;
-  log(`Scan complete in ${(elapsed/1000).toFixed(1)}s — ${uniqueCount} unique subdomains from ${new Set(allResults.map(r=>r.source)).size} sources.`, 'ok');
+  const srcCount = new Set(allResults.map(r=>r.source)).size;
+  log(`Done in ${((Date.now()-t0)/1000).toFixed(1)}s — ${uniqueCount} unique subdomains from ${srcCount} sources.`, 'ok');
   document.getElementById('scanBtn').disabled=false;
   document.getElementById('exportBtn').disabled=false;
   scanning=false;
-  updateStats(elapsed);
+  updateStats(Date.now()-t0);
 }
 
 // ─── Table ─────────────────────────────────────────────────────────────
@@ -544,16 +550,17 @@ function renderTable() {
   if (!data.length && allResults.length===0) {
     tbody.innerHTML='<tr><td colspan="4"><div class="empty-state"><div class="icon">🛰️</div><p>Enter a domain and hit Enumerate</p></div></td></tr>'; return;
   }
-  if (!data.length) { tbody.innerHTML='<tr><td colspan="4" style="text-align:center;padding:28px;color:var(--muted)">No results match filter</td></tr>'; return; }
+  if (!data.length) { tbody.innerHTML='<tr><td colspan="4" style="text-align:center;padding:26px;color:var(--muted)">No results match filter</td></tr>'; return; }
   tbody.innerHTML = data.map((r,i)=>`
     <tr>
       <td style="color:var(--muted)">${i+1}</td>
       <td class="sub-cell"><a href="https://${r.subdomain}" target="_blank" rel="noopener">${r.subdomain}</a></td>
       <td><span class="sbadge sbadge-${r.source}">${r.source}</span></td>
-      <td style="display:flex;gap:8px;align-items:center">
-        <a href="https://${r.subdomain}" target="_blank" rel="noopener" style="color:var(--accent);font-size:10px;letter-spacing:1px;text-decoration:none">↗ HTTP</a>
-        <a href="https://www.shodan.io/search?query=${r.subdomain}" target="_blank" rel="noopener" style="color:var(--accent4);font-size:10px;letter-spacing:1px;text-decoration:none">⊕ SHODAN</a>
-        <a href="https://crt.sh/?q=${r.subdomain}" target="_blank" rel="noopener" style="color:#ce93d8;font-size:10px;letter-spacing:1px;text-decoration:none">✦ CERTS</a>
+      <td style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <a href="https://${r.subdomain}" target="_blank" rel="noopener" style="color:var(--accent);font-size:10px;text-decoration:none">↗ HTTP</a>
+        <a href="https://www.shodan.io/search?query=${r.subdomain}" target="_blank" rel="noopener" style="color:var(--accent4);font-size:10px;text-decoration:none">⊕ SHODAN</a>
+        <a href="https://crt.sh/?q=${r.subdomain}" target="_blank" rel="noopener" style="color:#ce93d8;font-size:10px;text-decoration:none">✦ CERTS</a>
+        <a href="https://web.archive.org/web/*/${r.subdomain}" target="_blank" rel="noopener" style="color:#80cbc4;font-size:10px;text-decoration:none">◎ WAYBACK</a>
       </td>
     </tr>`).join('');
 }
@@ -566,11 +573,12 @@ function updateSourceFilter() {
 }
 
 function exportResults() {
+  const domain = document.getElementById('domainInput').value.trim();
   const unique = [...new Set(allResults.map(r=>r.subdomain))].sort();
-  const blob = new Blob([unique.join('\n')], { type:'text/plain' });
+  const blob = new Blob([unique.join('\n')], {type:'text/plain'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `subs_${document.getElementById('domainInput').value.trim()}_${Date.now()}.txt`;
+  a.download = `subs_${domain}_${Date.now()}.txt`;
   a.click();
 }
 
