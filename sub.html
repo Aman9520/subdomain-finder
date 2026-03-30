@@ -3,12 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SubRecon v5</title>
+<title>SubRecon v7</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#07090d;--s1:#0d1117;--s2:#111820;
-  --b:#1e2a36;
+  --bg:#07090d;--s1:#0d1117;--b:#1e2a36;
   --c1:#00e5ff;--c2:#ff4081;--c3:#69ff47;--c4:#ffeb3b;--c5:#ce93d8;
   --tx:#c9d1d9;--mu:#4a5568;
   --mono:'Share Tech Mono',monospace;--ui:'Rajdhani',sans-serif;
@@ -66,9 +65,9 @@ input.di::placeholder{color:var(--mu);}
 .smeta{margin-top:3px;display:flex;gap:5px;align-items:center;}
 .stype{font-size:9px;color:var(--mu);}
 .stag{font-size:9px;letter-spacing:1px;}
-.tag-direct{color:var(--c3);}
-.tag-proxy{color:var(--c4);}
-.tag-key{color:var(--c5);}
+.tag-d{color:var(--c3);}
+.tag-p{color:var(--c4);}
+.tag-k{color:var(--c5);}
 .sstatus{position:absolute;top:5px;right:7px;font-size:10px;}
 .st-ok{color:var(--c3);}
 .st-er{color:var(--c2);}
@@ -146,31 +145,28 @@ tr:hover td{background:rgba(0,229,255,.02);}
 </style>
 </head>
 <body>
-
 <header>
   <div>
     <div class="logo">Sub<em>Recon</em></div>
     <div style="font-size:9px;color:var(--mu);letter-spacing:2px;margin-top:2px;">PASSIVE SUBDOMAIN ENUMERATION</div>
   </div>
-  <div class="hbadge">V5 · 10 SOURCES · </div>
+  <div class="hbadge">V7 · 10 SOURCES</div>
 </header>
 
 <main>
-
 <div class="alert alert-info">
   <span style="font-size:15px;flex-shrink:0;">ℹ</span>
   <span>
-    <strong>Connection modes:</strong>
-    <span style="color:var(--c3)">DIRECT</span> = browser connects natively &nbsp;|&nbsp;
-    <span style="color:var(--c4)">PROXY</span> = routed via CORS proxy (3 fallbacks) &nbsp;|&nbsp;
-    <span style="color:var(--c5)">KEY</span> = requires your API key. Each card shows live status during scan.
+    <b>DIRECT</b> <span style="color:var(--c3)">●</span> = native browser fetch &nbsp;|&nbsp;
+    <b>PROXY</b> <span style="color:var(--c4)">●</span> = CORS proxy chain (3 fallbacks) &nbsp;|&nbsp;
+    <b>KEY</b> <span style="color:var(--c5)">●</span> = needs API key.
+    Open this file in Chrome/Firefox — <b>do not run inside Claude's preview panel</b>.
   </span>
 </div>
 
-<!-- API Keys -->
 <div class="panel">
   <div class="panel-head" onclick="togglePanel()">
-    <span style="color:var(--c4);">⚙</span>
+    <span style="color:var(--c4)">⚙</span>
     <span class="panel-title">API Keys</span>
     <span class="panel-sub">optional · VirusTotal · SecurityTrails · Shodan ▾</span>
   </div>
@@ -187,11 +183,10 @@ tr:hover td{background:rgba(0,229,255,.02);}
       <div class="klabel">Shodan <span class="kb-paid">PAID</span></div>
       <input class="kinput" id="kSH" type="password" placeholder="account.shodan.io → My Account → API Key">
     </div>
-    <div style="grid-column:1/-1;font-size:10px;color:var(--mu);">⚠ Keys stored in memory only — sent directly to each API, never to any proxy.</div>
+    <div style="grid-column:1/-1;font-size:10px;color:var(--mu)">⚠ Keys in browser memory only — sent directly to each API, never to any proxy.</div>
   </div>
 </div>
 
-<!-- Input -->
 <div class="irow">
   <div class="iwrap">
     <input type="text" class="di" id="domIn" placeholder="bytedance.com" autocomplete="off" spellcheck="false">
@@ -201,10 +196,8 @@ tr:hover td{background:rgba(0,229,255,.02);}
   <button class="btn b-cl" onclick="doClear()">Clear</button>
 </div>
 
-<!-- Sources -->
 <div class="sgrid" id="sgrid"></div>
 
-<!-- Stats -->
 <div class="stats">
   <div class="sc"><div class="sl">Total</div><div class="sv" id="sTotal">0</div></div>
   <div class="sc"><div class="sl">Unique</div><div class="sv" id="sUniq">0</div></div>
@@ -216,7 +209,6 @@ tr:hover td{background:rgba(0,229,255,.02);}
 <div class="pbar-wrap" id="pbw"><div class="pbar" id="pb"></div></div>
 <div class="log" id="logEl"></div>
 
-<!-- Filter -->
 <div class="fbar">
   <span class="flbl">Filter:</span>
   <input type="text" class="fi" id="fq" placeholder="grep subdomains..." oninput="applyFilter()">
@@ -224,7 +216,6 @@ tr:hover td{background:rgba(0,229,255,.02);}
   <span class="flbl" id="fcnt" style="color:var(--c1)"></span>
 </div>
 
-<!-- Table -->
 <div class="tw">
   <table>
     <thead>
@@ -240,419 +231,386 @@ tr:hover td{background:rgba(0,229,255,.02);}
     </tbody>
   </table>
 </div>
-
 </main>
 
 <script>
-// ─── KEY FIX: manual timeout — NO AbortSignal.timeout() ───────────────
-// AbortSignal.timeout() is not supported in older Chrome/Firefox versions
-// and causes "could not be cloned" errors in some environments.
-// This helper creates a plain AbortController with manual setTimeout.
-function fetchWithTimeout(url, opts, ms) {
-  ms = ms || 18000;
-  const controller = new AbortController();
-  const timer = setTimeout(function() { controller.abort(); }, ms);
-  const options = Object.assign({}, opts || {}, { signal: controller.signal });
-  return fetch(url, options).finally(function() { clearTimeout(timer); });
+// ══════════════════════════════════════════════════════════════
+//  CRITICAL FIX: ZERO AbortController / AbortSignal usage.
+//  The sandboxed iframe environment cannot clone AbortSignal
+//  objects across postMessage boundaries. Plain fetch() only.
+//  Timeouts are handled via Promise.race() with a timer promise.
+// ══════════════════════════════════════════════════════════════
+
+function delay(ms) {
+  return new Promise(function(resolve){ setTimeout(resolve, ms); });
 }
 
-// ─── CORS PROXIES (3 fallbacks) ───────────────────────────────────────
-var PROXIES = [
-  function(u){ return 'https://api.allorigins.win/get?url=' + encodeURIComponent(u); },
-  function(u){ return 'https://corsproxy.io/?' + encodeURIComponent(u); },
-  function(u){ return 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u); }
-];
+// Race fetch against a timeout — NO AbortSignal involved at all
+function fetchRace(url, opts, ms) {
+  var timeoutP = delay(ms || 20000).then(function(){ throw new Error('timeout after ' + (ms||20000) + 'ms'); });
+  return Promise.race([ fetch(url, opts || {}), timeoutP ]);
+}
 
-async function pFetch(url, asText) {
-  var lastErr = 'all proxies failed';
-  for (var i = 0; i < PROXIES.length; i++) {
-    try {
-      var r = await fetchWithTimeout(PROXIES[i](url), {}, 20000);
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      var j = await r.json();
-      // allorigins wraps in {contents:...}; others return raw
-      var raw = (j && j.contents !== undefined) ? j.contents : (typeof j === 'string' ? j : JSON.stringify(j));
-      if (!raw || raw.trim() === '') throw new Error('empty response');
-      return asText ? raw : JSON.parse(raw);
-    } catch(e) { lastErr = e.message; }
+// ── PROXY CHAIN ───────────────────────────────────────────────
+// 3 public CORS proxies tried in order.
+// Each one has a different response shape — handled individually.
+var PROXY_LIST = [
+  {
+    name: 'allorigins',
+    build: function(u){ return 'https://api.allorigins.win/get?url=' + encodeURIComponent(u); },
+    extract: function(text){
+      // allorigins returns: {"contents":"...actual body...","status":{...}}
+      try {
+        var j = JSON.parse(text);
+        return (j && j.contents != null) ? j.contents : text;
+      } catch(e){ return text; }
+    }
+  },
+  {
+    name: 'corsproxy',
+    build: function(u){ return 'https://corsproxy.io/?' + encodeURIComponent(u); },
+    extract: function(text){ return text; }
+  },
+  {
+    name: 'codetabs',
+    build: function(u){ return 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u); },
+    extract: function(text){ return text; }
   }
-  throw new Error(lastErr);
-}
-
-async function dFetch(url, opts) {
-  var r = await fetchWithTimeout(url, opts || {}, 18000);
-  if (!r.ok) throw new Error('HTTP ' + r.status);
-  return r;
-}
-
-// ─── SOURCES ──────────────────────────────────────────────────────────
-var SRCS = [
-  {id:'crtsh',         name:'crt.sh',        type:'Cert Log',    via:'proxy',  key:null, active:true},
-  {id:'hackertarget',  name:'HackerTarget',   type:'DNS Search',  via:'direct', key:null, active:true},
-  {id:'otx',           name:'AlienVault OTX', type:'Threat Intel',via:'direct', key:null, active:true},
-  {id:'urlscan',       name:'urlscan.io',     type:'URL Scanner', via:'proxy',  key:null, active:true},
-  {id:'wayback',       name:'Wayback CDX',    type:'Archive',     via:'proxy',  key:null, active:true},
-  {id:'rapiddns',      name:'RapidDNS',       type:'Passive DNS', via:'proxy',  key:null, active:true},
-  {id:'threatcrowd',   name:'ThreatCrowd',    type:'Threat Intel',via:'proxy',  key:null, active:true},
-  {id:'virustotal',    name:'VirusTotal',     type:'Passive DNS', via:'direct', key:'kVT', active:true},
-  {id:'securitytrails',name:'SecurityTrails', type:'Passive DNS', via:'direct', key:'kST', active:true},
-  {id:'shodan',        name:'Shodan',         type:'Port+DNS',    via:'direct', key:'kSH', active:true},
 ];
 
-var results = [], filtered = [], running = false, sortCol = 'sub', sortAsc = true;
+function looksLikeHTML(s){
+  var t = (s || '').trim();
+  return t.charAt(0) === '<';
+}
 
-// Build source cards
+// Returns raw text string through proxy chain
+async function proxyGetText(url) {
+  var errs = [];
+  for (var i = 0; i < PROXY_LIST.length; i++) {
+    var p = PROXY_LIST[i];
+    try {
+      var r = await fetchRace(p.build(url), {}, 22000);
+      if (!r.ok) { errs.push(p.name + ':HTTP' + r.status); continue; }
+      var rawText = await r.text();
+      var body = p.extract(rawText);
+      if (!body || body.trim() === '') { errs.push(p.name + ':empty'); continue; }
+      if (looksLikeHTML(body)) { errs.push(p.name + ':got-HTML'); continue; }
+      return body;
+    } catch(e) { errs.push(p.name + ':' + e.message.slice(0,40)); }
+  }
+  throw new Error(errs.join(' | '));
+}
+
+// Returns parsed JSON through proxy chain
+async function proxyGetJSON(url) {
+  var text = await proxyGetText(url);
+  try { return JSON.parse(text); }
+  catch(e){ throw new Error('JSON parse failed: ' + e.message.slice(0,60)); }
+}
+
+// Direct fetch returning parsed JSON
+async function directJSON(url, opts) {
+  var r = await fetchRace(url, opts || {}, 20000);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+
+// Direct fetch returning text
+async function directText(url, opts) {
+  var r = await fetchRace(url, opts || {}, 20000);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.text();
+}
+
+// ── SOURCES ───────────────────────────────────────────────────
+var SRCS = [
+  {id:'crtsh',         name:'crt.sh',        type:'Cert Log',    tag:'PROXY', tc:'tag-p', active:true},
+  {id:'hackertarget',  name:'HackerTarget',   type:'DNS Search',  tag:'DIRECT',tc:'tag-d', active:true},
+  {id:'otx',           name:'AlienVault OTX', type:'Threat Intel',tag:'DIRECT',tc:'tag-d', active:true},
+  {id:'urlscan',       name:'urlscan.io',     type:'URL Scanner', tag:'PROXY', tc:'tag-p', active:true},
+  {id:'wayback',       name:'Wayback CDX',    type:'Archive',     tag:'PROXY', tc:'tag-p', active:true},
+  {id:'rapiddns',      name:'RapidDNS',       type:'Passive DNS', tag:'PROXY', tc:'tag-p', active:true},
+  {id:'threatcrowd',   name:'ThreatCrowd',    type:'Threat Intel',tag:'PROXY', tc:'tag-p', active:true},
+  {id:'virustotal',    name:'VirusTotal',     type:'Passive DNS', tag:'KEY',   tc:'tag-k', active:true},
+  {id:'securitytrails',name:'SecurityTrails', type:'Passive DNS', tag:'KEY',   tc:'tag-k', active:true},
+  {id:'shodan',        name:'Shodan',         type:'Port+DNS',    tag:'KEY',   tc:'tag-k', active:true},
+];
+
+var results=[], filtered=[], running=false, sortCol='sub', sortAsc=true;
+
+// Build cards
 var sg = document.getElementById('sgrid');
-SRCS.forEach(function(s) {
+SRCS.forEach(function(s){
   var d = document.createElement('div');
-  d.className = 'scard on';
-  d.id = 'sc_' + s.id;
-  var tc = s.key ? 'tag-key' : (s.via === 'direct' ? 'tag-direct' : 'tag-proxy');
-  var tt = s.key ? 'KEY' : (s.via === 'direct' ? 'DIRECT' : 'PROXY');
-  d.innerHTML = '<div style="display:flex;align-items:center"><span class="sdot"></span><span class="sname">' + s.name + '</span></div>'
-    + '<div class="smeta"><span class="stype">' + s.type + '</span><span class="stag ' + tc + '">' + tt + '</span></div>'
-    + '<div class="sstatus" id="st_' + s.id + '"></div>';
-  d.onclick = function() { s.active = !s.active; d.classList.toggle('on', s.active); };
+  d.className='scard on'; d.id='sc_'+s.id;
+  d.innerHTML='<div style="display:flex;align-items:center"><span class="sdot"></span><span class="sname">'+s.name+'</span></div>'
+    +'<div class="smeta"><span class="stype">'+s.type+'</span><span class="stag '+s.tc+'">'+s.tag+'</span></div>'
+    +'<div class="sstatus" id="st_'+s.id+'"></div>';
+  d.onclick=function(){ s.active=!s.active; d.classList.toggle('on',s.active); };
   sg.appendChild(d);
 });
 
-function togglePanel() {
-  document.getElementById('pbody').classList.toggle('open');
+function togglePanel(){ document.getElementById('pbody').classList.toggle('open'); }
+
+function log(msg,t){
+  var el=document.getElementById('logEl'); el.classList.add('on');
+  var d=document.createElement('div'); d.className='ll '+(t||'');
+  d.textContent='['+new Date().toLocaleTimeString()+'] '+msg;
+  el.appendChild(d); el.scrollTop=el.scrollHeight;
 }
 
-function addLog(msg, type) {
-  var el = document.getElementById('logEl');
-  el.classList.add('on');
-  var d = document.createElement('div');
-  d.className = 'll ' + (type || '');
-  var t = new Date().toLocaleTimeString();
-  d.textContent = '[' + t + '] ' + msg;
-  el.appendChild(d);
-  el.scrollTop = el.scrollHeight;
+function setP(p){ document.getElementById('pbw').classList.add('on'); document.getElementById('pb').style.width=p+'%'; }
+
+function setSt(id,cls,txt){ var e=document.getElementById('st_'+id); if(e){e.className='sstatus '+cls;e.textContent=txt;} }
+
+function stats(ms){
+  var u=uniq(results.map(function(r){return r.sub;}));
+  var s=uniq(results.map(function(r){return r.src;}));
+  document.getElementById('sTotal').textContent=results.length;
+  document.getElementById('sUniq').textContent=u.length;
+  document.getElementById('sSrc').textContent=s.length;
+  document.getElementById('sWild').textContent=u.filter(function(x){return x.startsWith('*');}).length;
+  if(ms!=null) document.getElementById('sTime').textContent=(ms/1000).toFixed(1)+'s';
 }
 
-function setProgress(p) {
-  document.getElementById('pbw').classList.add('on');
-  document.getElementById('pb').style.width = p + '%';
+function uniq(arr){ return Array.from(new Set(arr)); }
+function ok(s,dom){ return s && typeof s==='string' && s.length<253 && (s.endsWith('.'+dom)||s===dom); }
+function mk(sub,src){ return {sub:sub,src:src}; }
+
+// ── FETCHERS ──────────────────────────────────────────────────
+
+async function fCrtSh(dom){
+  log('crt.sh → certificate transparency...','in'); setSt('crtsh','st-run','...');
+  try{
+    var data = await proxyGetJSON('https://crt.sh/?q=%25.'+dom+'&output=json');
+    if(!Array.isArray(data)) throw new Error('not an array');
+    var s=new Set();
+    data.forEach(function(e){ (e.name_value||'').split('\n').forEach(function(n){ n=n.trim().toLowerCase(); if(ok(n,dom))s.add(n); }); });
+    log('crt.sh → '+s.size+' ✓','ok'); setSt('crtsh','st-ok','✓');
+    return Array.from(s).map(function(x){return mk(x,'crtsh');});
+  }catch(e){log('crt.sh ✗ '+e.message,'er');setSt('crtsh','st-er','✗');return[];}
 }
 
-function setSt(id, cls, txt) {
-  var el = document.getElementById('st_' + id);
-  if (el) { el.className = 'sstatus ' + cls; el.textContent = txt; }
+async function fHT(dom){
+  log('HackerTarget → DNS search...','in'); setSt('hackertarget','st-run','...');
+  try{
+    var t = await directText('https://api.hackertarget.com/hostsearch/?q='+dom);
+    if(t.includes('API count')||t.includes('error')) throw new Error(t.slice(0,80));
+    var s=new Set(t.trim().split('\n').map(function(l){return l.split(',')[0].trim().toLowerCase();}).filter(function(x){return ok(x,dom);}));
+    log('HackerTarget → '+s.size+' ✓','ok'); setSt('hackertarget','st-ok','✓');
+    return Array.from(s).map(function(x){return mk(x,'hackertarget');});
+  }catch(e){log('HackerTarget ✗ '+e.message,'er');setSt('hackertarget','st-er','✗');return[];}
 }
 
-function updateStats(ms) {
-  var u = Array.from(new Set(results.map(function(r){ return r.sub; })));
-  var s = Array.from(new Set(results.map(function(r){ return r.src; })));
-  document.getElementById('sTotal').textContent = results.length;
-  document.getElementById('sUniq').textContent = u.length;
-  document.getElementById('sSrc').textContent = s.length;
-  document.getElementById('sWild').textContent = u.filter(function(x){ return x.startsWith('*'); }).length;
-  if (ms != null) document.getElementById('sTime').textContent = (ms / 1000).toFixed(1) + 's';
+async function fOTX(dom){
+  log('AlienVault OTX → passive DNS...','in'); setSt('otx','st-run','...');
+  try{
+    var d = await directJSON('https://otx.alienvault.com/api/v1/indicators/domain/'+dom+'/passive_dns');
+    var s=new Set((d.passive_dns||[]).map(function(e){return(e.hostname||'').trim().toLowerCase();}).filter(function(x){return ok(x,dom);}));
+    log('OTX → '+s.size+' ✓','ok'); setSt('otx','st-ok','✓');
+    return Array.from(s).map(function(x){return mk(x,'otx');});
+  }catch(e){log('OTX ✗ '+e.message,'er');setSt('otx','st-er','✗');return[];}
 }
 
-// ─── FETCHERS ─────────────────────────────────────────────────────────
-
-async function fCrtSh(dom) {
-  addLog('crt.sh → certificate transparency (proxy)...', 'in');
-  setSt('crtsh', 'st-run', '...');
-  try {
-    var data = await pFetch('https://crt.sh/?q=%.' + dom + '&output=json');
-    if (!Array.isArray(data)) throw new Error('unexpected format');
-    var s = new Set();
-    data.forEach(function(e) {
-      (e.name_value || '').split('\n').forEach(function(n) {
-        n = n.trim().toLowerCase();
-        if (n && (n.endsWith('.' + dom) || n === dom)) s.add(n);
-      });
-    });
-    addLog('crt.sh → ' + s.size + ' subdomains ✓', 'ok');
-    setSt('crtsh', 'st-ok', '✓');
-    return Array.from(s).map(function(x){ return {sub:x, src:'crtsh'}; });
-  } catch(e) { addLog('crt.sh ✗ ' + e.message, 'er'); setSt('crtsh','st-er','✗'); return []; }
+async function fUrlScan(dom){
+  log('urlscan.io → scan database...','in'); setSt('urlscan','st-run','...');
+  try{
+    var data = await proxyGetJSON('https://urlscan.io/api/v1/search/?q=domain:'+dom+'&size=200');
+    var s=new Set((data.results||[]).map(function(r){try{return new URL(r.page.url).hostname.toLowerCase();}catch(e){return'';}}).filter(function(x){return ok(x,dom);}));
+    log('urlscan.io → '+s.size+' ✓','ok'); setSt('urlscan','st-ok','✓');
+    return Array.from(s).map(function(x){return mk(x,'urlscan');});
+  }catch(e){log('urlscan.io ✗ '+e.message,'er');setSt('urlscan','st-er','✗');return[];}
 }
 
-async function fHT(dom) {
-  addLog('HackerTarget → DNS host search (direct)...', 'in');
-  setSt('hackertarget', 'st-run', '...');
-  try {
-    var r = await dFetch('https://api.hackertarget.com/hostsearch/?q=' + dom);
-    var t = await r.text();
-    if (t.includes('API count') || t.includes('error')) throw new Error(t.slice(0, 80));
-    var s = new Set(t.trim().split('\n').map(function(l){ return l.split(',')[0].trim().toLowerCase(); }).filter(function(x){ return x && x.endsWith('.' + dom); }));
-    addLog('HackerTarget → ' + s.size + ' subdomains ✓', 'ok');
-    setSt('hackertarget', 'st-ok', '✓');
-    return Array.from(s).map(function(x){ return {sub:x, src:'hackertarget'}; });
-  } catch(e) { addLog('HackerTarget ✗ ' + e.message, 'er'); setSt('hackertarget','st-er','✗'); return []; }
+async function fWayback(dom){
+  log('Wayback CDX → archive...','in'); setSt('wayback','st-run','...');
+  try{
+    var data = await proxyGetJSON('https://web.archive.org/cdx/search/cdx?url=*.'+dom+'/*&output=json&fl=original&collapse=urlkey&limit=2000');
+    var s=new Set();
+    (Array.isArray(data)?data:[]).slice(1).forEach(function(row){ try{var h=new URL(row[0]).hostname.toLowerCase();if(ok(h,dom))s.add(h);}catch(e){} });
+    log('Wayback → '+s.size+' ✓','ok'); setSt('wayback','st-ok','✓');
+    return Array.from(s).map(function(x){return mk(x,'wayback');});
+  }catch(e){log('Wayback ✗ '+e.message,'er');setSt('wayback','st-er','✗');return[];}
 }
 
-async function fOTX(dom) {
-  addLog('AlienVault OTX → passive DNS (direct)...', 'in');
-  setSt('otx', 'st-run', '...');
-  try {
-    var r = await dFetch('https://otx.alienvault.com/api/v1/indicators/domain/' + dom + '/passive_dns');
-    var d = await r.json();
-    var s = new Set((d.passive_dns || []).map(function(e){ return (e.hostname || '').trim().toLowerCase(); }).filter(function(x){ return x && (x.endsWith('.' + dom) || x === dom); }));
-    addLog('AlienVault OTX → ' + s.size + ' subdomains ✓', 'ok');
-    setSt('otx', 'st-ok', '✓');
-    return Array.from(s).map(function(x){ return {sub:x, src:'otx'}; });
-  } catch(e) { addLog('OTX ✗ ' + e.message, 'er'); setSt('otx','st-er','✗'); return []; }
+async function fRapidDNS(dom){
+  log('RapidDNS → scraping HTML...','in'); setSt('rapiddns','st-run','...');
+  try{
+    var text = await proxyGetText('https://rapiddns.io/subdomain/'+dom+'?full=1');
+    var esc=dom.replace(/\./g,'\\.');
+    var re=new RegExp('([a-z0-9][a-z0-9._-]*\\.'+esc+')','gi');
+    var s=new Set();
+    var m;
+    while((m=re.exec(text))!==null){ var sub=m[1].toLowerCase(); if(ok(sub,dom))s.add(sub); }
+    log('RapidDNS → '+s.size+' ✓','ok'); setSt('rapiddns','st-ok','✓');
+    return Array.from(s).map(function(x){return mk(x,'rapiddns');});
+  }catch(e){log('RapidDNS ✗ '+e.message,'er');setSt('rapiddns','st-er','✗');return[];}
 }
 
-async function fUrlScan(dom) {
-  addLog('urlscan.io → scan database (proxy)...', 'in');
-  setSt('urlscan', 'st-run', '...');
-  try {
-    var data = await pFetch('https://urlscan.io/api/v1/search/?q=domain:' + dom + '&size=200');
-    var s = new Set((data.results || []).map(function(r){ try { return new URL(r.page.url).hostname.toLowerCase(); } catch(e) { return ''; } }).filter(function(x){ return x && (x.endsWith('.' + dom) || x === dom); }));
-    addLog('urlscan.io → ' + s.size + ' subdomains ✓', 'ok');
-    setSt('urlscan', 'st-ok', '✓');
-    return Array.from(s).map(function(x){ return {sub:x, src:'urlscan'}; });
-  } catch(e) { addLog('urlscan.io ✗ ' + e.message, 'er'); setSt('urlscan','st-er','✗'); return []; }
+async function fThreatCrowd(dom){
+  log('ThreatCrowd → threat intel...','in'); setSt('threatcrowd','st-run','...');
+  try{
+    var data = await proxyGetJSON('https://www.threatcrowd.org/searchApi/v2/domain/report/?domain='+dom);
+    var s=new Set((data.subdomains||[]).map(function(x){return x.trim().toLowerCase();}).filter(function(x){return ok(x,dom);}));
+    log('ThreatCrowd → '+s.size+' ✓','ok'); setSt('threatcrowd','st-ok','✓');
+    return Array.from(s).map(function(x){return mk(x,'threatcrowd');});
+  }catch(e){log('ThreatCrowd ✗ '+e.message,'er');setSt('threatcrowd','st-er','✗');return[];}
 }
 
-async function fWayback(dom) {
-  addLog('Wayback CDX → web archive (proxy)...', 'in');
-  setSt('wayback', 'st-run', '...');
-  try {
-    var data = await pFetch('https://web.archive.org/cdx/search/cdx?url=*.' + dom + '/*&output=json&fl=original&collapse=urlkey&limit=2000');
-    var s = new Set();
-    (Array.isArray(data) ? data : []).slice(1).forEach(function(row) {
-      try { var h = new URL(row[0]).hostname.toLowerCase(); if (h.endsWith('.' + dom) || h === dom) s.add(h); } catch(e) {}
-    });
-    addLog('Wayback CDX → ' + s.size + ' subdomains ✓', 'ok');
-    setSt('wayback', 'st-ok', '✓');
-    return Array.from(s).map(function(x){ return {sub:x, src:'wayback'}; });
-  } catch(e) { addLog('Wayback ✗ ' + e.message, 'er'); setSt('wayback','st-er','✗'); return []; }
+async function fVT(dom,key){
+  if(!key){log('VirusTotal → skipped (no key)','wn');setSt('virustotal','st-sk','—');return[];}
+  log('VirusTotal → passive DNS...','in'); setSt('virustotal','st-run','...');
+  try{
+    var d = await directJSON('https://www.virustotal.com/api/v3/domains/'+dom+'/subdomains?limit=40',{headers:{'x-apikey':key}});
+    var s=new Set((d.data||[]).map(function(e){return(e.id||'').trim().toLowerCase();}).filter(function(x){return ok(x,dom);}));
+    log('VirusTotal → '+s.size+' ✓','ok'); setSt('virustotal','st-ok','✓');
+    return Array.from(s).map(function(x){return mk(x,'virustotal');});
+  }catch(e){log('VirusTotal ✗ '+e.message,'er');setSt('virustotal','st-er','✗');return[];}
 }
 
-async function fRapidDNS(dom) {
-  addLog('RapidDNS → passive DNS (proxy)...', 'in');
-  setSt('rapiddns', 'st-run', '...');
-  try {
-    var text = await pFetch('https://rapiddns.io/subdomain/' + dom + '?full=1', true);
-    var escaped = dom.replace(/\./g, '\\.');
-    var re = new RegExp('([a-z0-9_-]+(?:\\.[a-z0-9_-]+)*\\.' + escaped + ')(?:[^a-z0-9.-]|$)', 'gi');
-    var matches = text.match(re) || [];
-    var s = new Set(matches.map(function(m){ return m.replace(/[^a-z0-9._-]/gi,'').toLowerCase(); }).filter(function(x){ return x && x.endsWith('.' + dom) && x !== dom; }));
-    addLog('RapidDNS → ' + s.size + ' subdomains ✓', 'ok');
-    setSt('rapiddns', 'st-ok', '✓');
-    return Array.from(s).map(function(x){ return {sub:x, src:'rapiddns'}; });
-  } catch(e) { addLog('RapidDNS ✗ ' + e.message, 'er'); setSt('rapiddns','st-er','✗'); return []; }
+async function fST(dom,key){
+  if(!key){log('SecurityTrails → skipped (no key)','wn');setSt('securitytrails','st-sk','—');return[];}
+  log('SecurityTrails → passive DNS...','in'); setSt('securitytrails','st-run','...');
+  try{
+    var d = await directJSON('https://api.securitytrails.com/v1/domain/'+dom+'/subdomains?children_only=false&include_inactive=true',{headers:{'APIKEY':key}});
+    var s=new Set((d.subdomains||[]).map(function(x){return x.trim().toLowerCase()+'.'+dom;}));
+    log('SecurityTrails → '+s.size+' ✓','ok'); setSt('securitytrails','st-ok','✓');
+    return Array.from(s).map(function(x){return mk(x,'securitytrails');});
+  }catch(e){log('SecurityTrails ✗ '+e.message,'er');setSt('securitytrails','st-er','✗');return[];}
 }
 
-async function fThreatCrowd(dom) {
-  addLog('ThreatCrowd → threat intel (proxy)...', 'in');
-  setSt('threatcrowd', 'st-run', '...');
-  try {
-    var data = await pFetch('https://www.threatcrowd.org/searchApi/v2/domain/report/?domain=' + dom);
-    var s = new Set((data.subdomains || []).map(function(x){ return x.trim().toLowerCase(); }).filter(function(x){ return x && (x.endsWith('.' + dom) || x === dom); }));
-    addLog('ThreatCrowd → ' + s.size + ' subdomains ✓', 'ok');
-    setSt('threatcrowd', 'st-ok', '✓');
-    return Array.from(s).map(function(x){ return {sub:x, src:'threatcrowd'}; });
-  } catch(e) { addLog('ThreatCrowd ✗ ' + e.message, 'er'); setSt('threatcrowd','st-er','✗'); return []; }
+async function fShodan(dom,key){
+  if(!key){log('Shodan → skipped (no key)','wn');setSt('shodan','st-sk','—');return[];}
+  log('Shodan → DNS+ports...','in'); setSt('shodan','st-run','...');
+  try{
+    var d = await directJSON('https://api.shodan.io/dns/domain/'+dom+'?key='+key);
+    var s=new Set((d.subdomains||[]).map(function(x){return x.trim().toLowerCase()+'.'+dom;}));
+    log('Shodan → '+s.size+' ✓','ok'); setSt('shodan','st-ok','✓');
+    return Array.from(s).map(function(x){return mk(x,'shodan');});
+  }catch(e){log('Shodan ✗ '+e.message,'er');setSt('shodan','st-er','✗');return[];}
 }
 
-async function fVT(dom, key) {
-  if (!key) { addLog('VirusTotal → skipped (no key)', 'wn'); setSt('virustotal','st-sk','—'); return []; }
-  addLog('VirusTotal → passive DNS (direct+key)...', 'in');
-  setSt('virustotal', 'st-run', '...');
-  try {
-    var r = await fetchWithTimeout('https://www.virustotal.com/api/v3/domains/' + dom + '/subdomains?limit=40', { headers: { 'x-apikey': key } }, 18000);
-    if (!r.ok) throw new Error('HTTP ' + r.status + ' — check key');
-    var d = await r.json();
-    var s = new Set((d.data || []).map(function(e){ return (e.id || '').trim().toLowerCase(); }).filter(function(x){ return x && (x.endsWith('.' + dom) || x === dom); }));
-    addLog('VirusTotal → ' + s.size + ' subdomains ✓', 'ok');
-    setSt('virustotal', 'st-ok', '✓');
-    return Array.from(s).map(function(x){ return {sub:x, src:'virustotal'}; });
-  } catch(e) { addLog('VirusTotal ✗ ' + e.message, 'er'); setSt('virustotal','st-er','✗'); return []; }
-}
+// ── SCAN ──────────────────────────────────────────────────────
+async function startScan(){
+  var raw=document.getElementById('domIn').value.trim();
+  var dom=raw.toLowerCase().replace(/^https?:\/\//,'').replace(/\/.*$/,'').replace(/^www\./,'').trim();
+  if(!dom||!/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(dom)){alert('Enter a valid domain e.g. bytedance.com');return;}
 
-async function fST(dom, key) {
-  if (!key) { addLog('SecurityTrails → skipped (no key)', 'wn'); setSt('securitytrails','st-sk','—'); return []; }
-  addLog('SecurityTrails → passive DNS (direct+key)...', 'in');
-  setSt('securitytrails', 'st-run', '...');
-  try {
-    var r = await fetchWithTimeout('https://api.securitytrails.com/v1/domain/' + dom + '/subdomains?children_only=false&include_inactive=true', { headers: { 'APIKEY': key } }, 18000);
-    if (!r.ok) throw new Error('HTTP ' + r.status + ' — check key');
-    var d = await r.json();
-    var s = new Set((d.subdomains || []).map(function(x){ return x.trim().toLowerCase() + '.' + dom; }));
-    addLog('SecurityTrails → ' + s.size + ' subdomains ✓', 'ok');
-    setSt('securitytrails', 'st-ok', '✓');
-    return Array.from(s).map(function(x){ return {sub:x, src:'securitytrails'}; });
-  } catch(e) { addLog('SecurityTrails ✗ ' + e.message, 'er'); setSt('securitytrails','st-er','✗'); return []; }
-}
+  var kVT=document.getElementById('kVT').value.trim();
+  var kST=document.getElementById('kST').value.trim();
+  var kSH=document.getElementById('kSH').value.trim();
 
-async function fShodan(dom, key) {
-  if (!key) { addLog('Shodan → skipped (no key)', 'wn'); setSt('shodan','st-sk','—'); return []; }
-  addLog('Shodan → DNS+ports (direct+key)...', 'in');
-  setSt('shodan', 'st-run', '...');
-  try {
-    var r = await fetchWithTimeout('https://api.shodan.io/dns/domain/' + dom + '?key=' + key, {}, 18000);
-    if (!r.ok) throw new Error('HTTP ' + r.status + ' — check key');
-    var d = await r.json();
-    var s = new Set((d.subdomains || []).map(function(x){ return x.trim().toLowerCase() + '.' + dom; }));
-    addLog('Shodan → ' + s.size + ' subdomains ✓', 'ok');
-    setSt('shodan', 'st-ok', '✓');
-    return Array.from(s).map(function(x){ return {sub:x, src:'shodan'}; });
-  } catch(e) { addLog('Shodan ✗ ' + e.message, 'er'); setSt('shodan','st-er','✗'); return []; }
-}
-
-// ─── MAIN SCAN ────────────────────────────────────────────────────────
-async function startScan() {
-  var raw = document.getElementById('domIn').value.trim();
-  var dom = raw.toLowerCase().replace(/^https?:\/\//,'').replace(/\/.*$/,'').replace(/^www\./,'').trim();
-  if (!dom || !/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(dom)) {
-    alert('Please enter a valid domain.\nExample: bytedance.com');
-    return;
-  }
-
-  var kVT = document.getElementById('kVT').value.trim();
-  var kST = document.getElementById('kST').value.trim();
-  var kSH = document.getElementById('kSH').value.trim();
-
-  results = []; filtered = []; running = true;
-  SRCS.forEach(function(s){ setSt(s.id, '', ''); });
-  document.getElementById('logEl').innerHTML = '';
+  results=[];filtered=[];running=true;
+  SRCS.forEach(function(s){setSt(s.id,'','');});
+  document.getElementById('logEl').innerHTML='';
   document.getElementById('logEl').classList.add('on');
   document.getElementById('pbw').classList.add('on');
-  document.getElementById('pb').style.width = '0%';
-  document.getElementById('btnGo').disabled = true;
-  document.getElementById('btnEx').disabled = true;
-  document.getElementById('sTime').textContent = '…';
-  document.getElementById('tbody').innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--mu)"><span class="spin"></span><span class="blink">SCANNING ' + dom + '...</span></td></tr>';
-  updateStats(null); updateSrcFilter();
+  document.getElementById('pb').style.width='0%';
+  document.getElementById('btnGo').disabled=true;
+  document.getElementById('btnEx').disabled=true;
+  document.getElementById('sTime').textContent='…';
+  document.getElementById('tbody').innerHTML='<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--mu)"><span class="spin"></span><span class="blink">SCANNING '+dom+'...</span></td></tr>';
+  stats(null); updSrcFilter();
 
-  var active = SRCS.filter(function(s){ return s.active; });
-  addLog('Target: ' + dom + ' | ' + active.length + ' sources active', 'in');
-  var t0 = Date.now();
+  var active=SRCS.filter(function(s){return s.active;});
+  log('Target: '+dom+' | '+active.length+' sources','in');
+  var t0=Date.now();
 
-  var fetchers = {
-    crtsh:          function(){ return fCrtSh(dom); },
-    hackertarget:   function(){ return fHT(dom); },
-    otx:            function(){ return fOTX(dom); },
-    urlscan:        function(){ return fUrlScan(dom); },
-    wayback:        function(){ return fWayback(dom); },
-    rapiddns:       function(){ return fRapidDNS(dom); },
-    threatcrowd:    function(){ return fThreatCrowd(dom); },
-    virustotal:     function(){ return fVT(dom, kVT); },
-    securitytrails: function(){ return fST(dom, kST); },
-    shodan:         function(){ return fShodan(dom, kSH); }
+  var map={
+    crtsh:function(){return fCrtSh(dom);},
+    hackertarget:function(){return fHT(dom);},
+    otx:function(){return fOTX(dom);},
+    urlscan:function(){return fUrlScan(dom);},
+    wayback:function(){return fWayback(dom);},
+    rapiddns:function(){return fRapidDNS(dom);},
+    threatcrowd:function(){return fThreatCrowd(dom);},
+    virustotal:function(){return fVT(dom,kVT);},
+    securitytrails:function(){return fST(dom,kST);},
+    shodan:function(){return fShodan(dom,kSH);}
   };
 
-  var done = 0;
-  var total = active.length;
+  var done=0, total=active.length;
+  await Promise.allSettled(active.map(async function(s){
+    try{ var r=await map[s.id](); results=results.concat(r); }
+    catch(e){ log(s.name+' unexpected: '+e.message,'er'); setSt(s.id,'st-er','✗'); }
+    done++; setP(Math.round(done/total*100)); stats(Date.now()-t0); applyFilter(); updSrcFilter();
+  }));
 
-  var tasks = active.map(async function(s) {
-    try {
-      var r = await fetchers[s.id]();
-      results = results.concat(r);
-    } catch(e) {
-      addLog(s.name + ' unexpected: ' + e.message, 'er');
-      setSt(s.id, 'st-er', '✗');
-    }
-    done++;
-    setProgress(Math.round(done / total * 100));
-    updateStats(Date.now() - t0);
-    applyFilter();
-    updateSrcFilter();
-  });
-
-  await Promise.allSettled(tasks);
-
-  var elapsed = Date.now() - t0;
-  setProgress(100);
-  var uq = new Set(results.map(function(r){ return r.sub; })).size;
-  var sr = new Set(results.map(function(r){ return r.src; })).size;
-  addLog('Done in ' + (elapsed/1000).toFixed(1) + 's — ' + uq + ' unique subdomains from ' + sr + ' sources', 'ok');
-  document.getElementById('btnGo').disabled = false;
-  document.getElementById('btnEx').disabled = results.length === 0;
-  running = false;
-  updateStats(elapsed);
+  var el=Date.now()-t0;
+  setP(100);
+  var uq=uniq(results.map(function(r){return r.sub;})).length;
+  var sr=uniq(results.map(function(r){return r.src;})).length;
+  log('Done '+( el/1000).toFixed(1)+'s — '+uq+' unique subdomains from '+sr+' sources','ok');
+  document.getElementById('btnGo').disabled=false;
+  document.getElementById('btnEx').disabled=results.length===0;
+  running=false; stats(el);
 }
 
-// ─── TABLE ────────────────────────────────────────────────────────────
-function sortBy(col) {
-  if (sortCol === col) sortAsc = !sortAsc; else { sortCol = col; sortAsc = true; }
+// ── TABLE ─────────────────────────────────────────────────────
+function sortBy(c){ if(sortCol===c)sortAsc=!sortAsc; else{sortCol=c;sortAsc=true;} renderTable(); }
+
+function applyFilter(){
+  var q=document.getElementById('fq').value.toLowerCase();
+  var sf=document.getElementById('fsrc').value;
+  var seen=new Set();
+  filtered=results.filter(function(r){
+    var k=r.sub+'|'+r.src; if(seen.has(k))return false; seen.add(k);
+    return(!q||r.sub.includes(q))&&(!sf||r.src===sf);
+  });
+  document.getElementById('fcnt').textContent=filtered.length+' shown';
   renderTable();
 }
 
-function applyFilter() {
-  var q = document.getElementById('fq').value.toLowerCase();
-  var sf = document.getElementById('fsrc').value;
-  var seen = new Set();
-  filtered = results.filter(function(r) {
-    var k = r.sub + '|' + r.src;
-    if (seen.has(k)) return false;
-    seen.add(k);
-    return (!q || r.sub.includes(q)) && (!sf || r.src === sf);
-  });
-  document.getElementById('fcnt').textContent = filtered.length + ' shown';
-  renderTable();
-}
-
-function renderTable() {
-  var col = sortCol;
-  var data = filtered.slice().sort(function(a, b) {
-    return sortAsc ? a[col].localeCompare(b[col]) : b[col].localeCompare(a[col]);
-  });
-  var tb = document.getElementById('tbody');
-  if (!data.length && results.length === 0) {
-    tb.innerHTML = '<tr><td colspan="4"><div class="empty"><div class="ei">🛰️</div><p>Enter a domain and hit Enumerate</p></div></td></tr>';
-    return;
-  }
-  if (!data.length) {
-    tb.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--mu)">No results match filter</td></tr>';
-    return;
-  }
-  tb.innerHTML = data.map(function(r, i) {
+function renderTable(){
+  var c=sortCol;
+  var data=filtered.slice().sort(function(a,b){return sortAsc?a[c].localeCompare(b[c]):b[c].localeCompare(a[c]);});
+  var tb=document.getElementById('tbody');
+  if(!data.length&&results.length===0){tb.innerHTML='<tr><td colspan="4"><div class="empty"><div class="ei">🛰️</div><p>Enter a domain and hit Enumerate</p></div></td></tr>';return;}
+  if(!data.length){tb.innerHTML='<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--mu)">No results match filter</td></tr>';return;}
+  tb.innerHTML=data.map(function(r,i){
     return '<tr>'
-      + '<td style="color:var(--mu)">' + (i+1) + '</td>'
-      + '<td class="tc"><a href="https://' + r.sub + '" target="_blank" rel="noopener">' + r.sub + '</a></td>'
-      + '<td><span class="sbg sbg-' + r.src + '">' + r.src + '</span></td>'
-      + '<td style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
-      + '<a href="https://' + r.sub + '" target="_blank" rel="noopener" style="color:var(--c1);font-size:10px;text-decoration:none">↗ HTTP</a>'
-      + '<a href="https://www.shodan.io/search?query=' + r.sub + '" target="_blank" rel="noopener" style="color:var(--c4);font-size:10px;text-decoration:none">⊕ SHODAN</a>'
-      + '<a href="https://crt.sh/?q=' + r.sub + '" target="_blank" rel="noopener" style="color:var(--c5);font-size:10px;text-decoration:none">✦ CERTS</a>'
-      + '<a href="https://web.archive.org/web/*/' + r.sub + '" target="_blank" rel="noopener" style="color:#80cbc4;font-size:10px;text-decoration:none">◎ ARCHIVE</a>'
-      + '</td></tr>';
+      +'<td style="color:var(--mu)">'+(i+1)+'</td>'
+      +'<td class="tc"><a href="https://'+r.sub+'" target="_blank" rel="noopener">'+r.sub+'</a></td>'
+      +'<td><span class="sbg sbg-'+r.src+'">'+r.src+'</span></td>'
+      +'<td style="display:flex;gap:8px;flex-wrap:wrap;">'
+      +'<a href="https://'+r.sub+'" target="_blank" rel="noopener" style="color:var(--c1);font-size:10px;text-decoration:none">↗ HTTP</a>'
+      +'<a href="https://www.shodan.io/search?query='+r.sub+'" target="_blank" rel="noopener" style="color:var(--c4);font-size:10px;text-decoration:none">⊕ SHODAN</a>'
+      +'<a href="https://crt.sh/?q='+r.sub+'" target="_blank" rel="noopener" style="color:var(--c5);font-size:10px;text-decoration:none">✦ CERTS</a>'
+      +'<a href="https://web.archive.org/web/*/'+r.sub+'" target="_blank" rel="noopener" style="color:#80cbc4;font-size:10px;text-decoration:none">◎ ARCHIVE</a>'
+      +'</td></tr>';
   }).join('');
 }
 
-function updateSrcFilter() {
-  var sel = document.getElementById('fsrc');
-  var cur = sel.value;
-  var srcs = Array.from(new Set(results.map(function(r){ return r.src; })));
-  sel.innerHTML = '<option value="">All Sources</option>' + srcs.map(function(s){ return '<option value="' + s + '"' + (s===cur?' selected':'') + '>' + s + '</option>'; }).join('');
+function updSrcFilter(){
+  var sel=document.getElementById('fsrc'), cur=sel.value;
+  var srcs=uniq(results.map(function(r){return r.src;}));
+  sel.innerHTML='<option value="">All Sources</option>'+srcs.map(function(s){return'<option value="'+s+'"'+(s===cur?' selected':'')+'>'+s+'</option>';}).join('');
 }
 
-function doExport() {
-  var dom = document.getElementById('domIn').value.trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
-  var lines = Array.from(new Set(results.map(function(r){ return r.sub; }))).sort().join('\n');
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([lines], {type:'text/plain'}));
-  a.download = 'subs_' + dom + '_' + Date.now() + '.txt';
-  a.click();
+function doExport(){
+  var dom=document.getElementById('domIn').value.trim().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+  var lines=uniq(results.map(function(r){return r.sub;})).sort().join('\n');
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([lines],{type:'text/plain'}));
+  a.download='subs_'+dom+'_'+Date.now()+'.txt'; a.click();
 }
 
-function doClear() {
-  results = []; filtered = [];
-  ['domIn','fq','kVT','kST','kSH'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
-  document.getElementById('logEl').innerHTML = '';
+function doClear(){
+  results=[];filtered=[];
+  ['domIn','fq','kVT','kST','kSH'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('logEl').innerHTML='';
   document.getElementById('logEl').classList.remove('on');
   document.getElementById('pbw').classList.remove('on');
-  document.getElementById('pb').style.width = '0%';
-  document.getElementById('btnEx').disabled = true;
-  document.getElementById('sTime').textContent = '—';
-  document.getElementById('fsrc').innerHTML = '<option value="">All Sources</option>';
-  document.getElementById('fcnt').textContent = '';
-  SRCS.forEach(function(s){ setSt(s.id,'',''); });
-  updateStats(null); renderTable();
+  document.getElementById('pb').style.width='0%';
+  document.getElementById('btnEx').disabled=true;
+  document.getElementById('sTime').textContent='—';
+  document.getElementById('fsrc').innerHTML='<option value="">All Sources</option>';
+  document.getElementById('fcnt').textContent='';
+  SRCS.forEach(function(s){setSt(s.id,'','');});
+  stats(null); renderTable();
 }
 
-document.getElementById('domIn').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter' && !running) startScan();
-});
+document.getElementById('domIn').addEventListener('keydown',function(e){if(e.key==='Enter'&&!running)startScan();});
 </script>
 </body>
 </html>
