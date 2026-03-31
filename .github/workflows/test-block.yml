@@ -1,0 +1,9 @@
+name: <h1>Test blocked action
+
+on: workflow_dispatch
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Aman9520/subdomain-finder@main
