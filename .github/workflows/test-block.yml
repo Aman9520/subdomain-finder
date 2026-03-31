@@ -1,4 +1,4 @@
-name: Test blocked action
+name: <h1>Test blocked action
 
 on: workflow_dispatch
 
